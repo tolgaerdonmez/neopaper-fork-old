@@ -360,39 +360,48 @@ p:last-child { margin-bottom: 0; }
   font-size: var(--text-sm);
 }
 
-/* ── MATH DERIVATION WALKTHROUGH ────────────────────────────── */
+/* ── DERIVATION / PROOF ─────────────────────────────────────────
+   The whole chain is always visible: equation lines on the left read as
+   one continuous derivation, each line's justification on the right.
+   ──────────────────────────────────────────────────────────── */
 .math-derivation {
   background: var(--color-surface);
+  border: 1px solid var(--color-border);
   border-radius: var(--radius-lg);
-  padding: var(--space-8);
-  box-shadow: var(--shadow-md);
+  padding: var(--space-4) var(--space-4);
+  box-shadow: var(--shadow-sm);
   margin: var(--space-8) 0;
 }
 .math-step {
-  padding: var(--space-6) 0;
-  border-bottom: 1px solid var(--color-border-light);
+  display: grid;
+  grid-template-columns: minmax(0, 1.5fr) minmax(0, 1fr);
+  gap: var(--space-6);
+  align-items: center;
+  padding: var(--space-3) var(--space-4);
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  transition: background var(--duration-fast);
 }
-.math-step:last-of-type { border-bottom: none; }
+.math-step + .math-step { border-top: 1px solid var(--color-border-light); }
+.math-step:hover, .math-step.current { background: var(--color-accent-light); }
 .math-step .math-equation {
-  background: var(--color-math-bg);
-  border: 1px solid var(--color-math-border);
-  border-radius: var(--radius-md);
-  padding: var(--space-5);
-  margin-bottom: var(--space-4);
-  text-align: center;
+  text-align: left;
   overflow-x: auto;
+  overflow-y: hidden;
 }
-.math-step .math-equation .katex { font-size: 1.15em; }
+.math-step .math-equation .katex-display { margin: 0; text-align: left; }
+.math-step .math-equation .katex-display > .katex { text-align: left; }
+.math-step .math-equation .katex { font-size: 1.1em; }
 .math-step .math-explanation {
   font-size: var(--text-sm);
   color: var(--color-text-secondary);
   line-height: var(--leading-normal);
-  padding: var(--space-3) var(--space-4);
-  background: var(--color-surface-warm);
-  border-radius: var(--radius-sm);
-  border: 1px solid var(--color-border-light);
 }
 .math-step .math-explanation p { margin: 0; }
+.math-step.current .math-explanation { color: var(--color-text); }
+@media (max-width: 768px) {
+  .math-step { grid-template-columns: 1fr; gap: var(--space-2); }
+}
 .math-controls {
   display: flex;
   align-items: center;

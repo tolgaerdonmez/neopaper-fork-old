@@ -16,7 +16,7 @@
  *  - Architecture diagram
  *  - "Spot the bug" / "Spot the assumption" challenge
  *  - Layer toggle / ablation toggle
- *  - Math derivation walkthrough
+ *  - Derivation / proof, whole, explained line by line
  *  - Pseudocode walkthrough
  *  - Result comparison
  *  - Research lineage tree
@@ -630,24 +630,33 @@
 
   safeInit('ablation toggle', () => $$('.layer-demo, .ablation-demo').forEach(markReady));
 
-  /* ── MATH DERIVATION WALKTHROUGH ───────────────────────────── */
+  /* ── DERIVATION / PROOF (whole, explained line by line) ───── */
+  // Every line stays visible: a derivation or proof is read as a whole, with
+  // each line's justification beside it. Upstream showed one step at a time
+  // and hid the rest, which broke the argument into disconnected pages.
+  // Hovering a line, or the optional Previous/Next controls, only
+  // highlights it.
   function initMathDerivation(containerEl) {
     const steps      = $$('.math-step', containerEl);
     const progressEl = $('.math-progress', containerEl);
-    let current = 0;
+    let current = -1;
 
-    function showStep(idx) {
-      steps.forEach((s, i) => { s.style.display = i === idx ? 'block' : 'none'; });
-      if (progressEl) progressEl.textContent = t('step', { n: idx + 1, total: steps.length });
+    steps.forEach(s => { s.style.display = ''; });
+
+    function focusStep(idx) {
+      current = idx;
+      steps.forEach((s, i) => s.classList.toggle('current', i === idx));
+      if (progressEl) progressEl.textContent = idx < 0 ? '' : t('step', { n: idx + 1, total: steps.length });
     }
 
+    steps.forEach((s, i) => s.addEventListener('click', () => focusStep(current === i ? -1 : i)));
     const nextBtn  = $('.math-next-btn',  containerEl);
     const prevBtn  = $('.math-prev-btn',  containerEl);
     const resetBtn = $('.math-reset-btn', containerEl);
-    if (nextBtn)  nextBtn.addEventListener('click',  () => { if (current < steps.length - 1) showStep(++current); });
-    if (prevBtn)  prevBtn.addEventListener('click',  () => { if (current > 0) showStep(--current); });
-    if (resetBtn) resetBtn.addEventListener('click', () => { current = 0; showStep(0); });
-    showStep(0);
+    if (nextBtn)  nextBtn.addEventListener('click',  () => focusStep(Math.min(current + 1, steps.length - 1)));
+    if (prevBtn)  prevBtn.addEventListener('click',  () => focusStep(Math.max(current - 1, 0)));
+    if (resetBtn) resetBtn.addEventListener('click', () => focusStep(-1));
+    focusStep(-1);
     markReady(containerEl);
   }
 

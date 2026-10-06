@@ -141,7 +141,7 @@ This is a **menu, not a checklist**. Follow the paper: a theory paper has no exp
 - At most one `.key-idea` per screen; no callouts
 
 **Mandatory interactive elements per course:**
-- **Math Derivation Walkthrough**: at least one step-by-step derivation, in the paper's notation
+- **Math Derivation Walkthrough**: at least one derivation or proof shown whole, every line visible with its justification beside it, in the paper's notation
 - **Research Lineage Tree**: at least one visual showing how this paper relates to prior work
 - **Pseudocode Walkthrough**: at least one, when the paper has an algorithm, rule set or code
 - **Result Comparison Interactive**: at least one, when the paper reports quantitative results (skip for papers without numbers; never invent numbers)

@@ -44,6 +44,10 @@ The course must mirror the paper. Readers will go back to the paper, and every d
 - In diagrams, a label that a reader cannot match to a paper object is a bug. Every node and every arrow that stands for a paper object carries that object's symbol, and the caption says which definition or figure the diagram follows.
 - Show a definition in the paper's form first, then explain it. Do not replace it with a "simplified" restatement that changes its meaning or conditions.
 
+### Proofs and Derivations Are Read Whole
+
+A theorem and its proof, or a derivation, are one argument. Show the statement and every line of the proof at once, each line with its justification beside it, so the reader sees the whole chain and can still go through it line by line. Never paginate a proof into steps that hide each other; a reader who sees one line at a time loses the argument.
+
 ### LaTeX For All Math
 
 Every piece of mathematics is typeset with KaTeX: `$...$` inline and `$$...$$` for display, including single symbols in running text ("the learning rate $\eta$"), indices, sets, types and function signatures. Plain-text or Unicode math (`x_i`, `R^n`, `f∘g`, `x0`) is hard to read and is a defect. This applies inside tooltips, quiz text, pseudocode lines, explorer UI and diagrams too.

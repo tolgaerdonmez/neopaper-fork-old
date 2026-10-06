@@ -103,47 +103,34 @@ The course cover is a full-viewport landing page that appears before all modules
 
 ## Math Derivation Walkthrough
 
-The most important teaching element. Shows a mathematical equation and lets the learner click through each derivation step.
+The most important teaching element: a derivation or proof shown **as a whole**, every line visible at once, with each line's justification beside it. The reader sees the full chain of reasoning and can still follow it line by line. Never split a derivation or proof into pages that hide the other steps: a theorem and its proof are one argument.
 
-**Wiring:** `main.js` auto-initializes every `.math-derivation`. Steps are `.math-step` elements. Controls: `.math-next-btn`, `.math-prev-btn`, `.math-reset-btn`. Progress: `.math-progress`.
+**Wiring:** `main.js` auto-initializes every `.math-derivation`. Each `.math-step` is one line: its equation on the left, its explanation on the right (stacked on narrow screens). Hovering or clicking a line highlights it. Previous/Next controls (`.math-prev-btn`, `.math-next-btn`, `.math-reset-btn`, progress in `.math-progress`) are optional; they only move the highlight and never hide lines. Most derivations need no controls.
 
 **HTML:**
 ```html
-<div class="math-derivation animate-in" id="math-deriv-1">
-  <div class="math-step" data-step="0">
-    <div class="math-equation">
-      $$L_{GRPO} = -\mathbb{E}_{q \sim P(Q)} \left[ \frac{1}{G} \sum_{i=1}^{G} \min\left( \frac{\pi_\theta(o_i|q)}{\pi_{ref}(o_i|q)} A_i, \text{clip}(\cdot) A_i \right) \right]$$
-    </div>
-    <div class="math-explanation">
-      <p>The GRPO loss function measures how far the model's answers are from the reference policy. The advantage function $A_i$ tells us how good each answer is relative to the average.</p>
-    </div>
+<div class="math-derivation animate-in" id="deriv-advantage">
+  <div class="math-step">
+    <div class="math-equation">$$A_i = \frac{r_i - \operatorname{mean}(r_1, \dots, r_G)}{\operatorname{std}(r_1, \dots, r_G)}$$</div>
+    <div class="math-explanation"><p>Definition of the advantage (Eq. 3): each reward relative to its own group.</p></div>
   </div>
-
-  <div class="math-step" data-step="1" style="display:none">
-    <div class="math-equation">
-      $$A_i = \frac{r_i - \text{mean}(\{r_1, ..., r_G\})}{\text{std}(\{r_1, ..., r_G\})}$$
-    </div>
-    <div class="math-explanation">
-      <p>The advantage is computed by within-group normalization: subtract the mean from each answer's reward, then divide by the standard deviation. This tells us how much better or worse each answer is than the others in the same group.</p>
-    </div>
+  <div class="math-step">
+    <div class="math-equation">$$\sum_{i=1}^{G} A_i = \frac{\sum_i r_i - G \operatorname{mean}(r)}{\operatorname{std}(r)}$$</div>
+    <div class="math-explanation"><p>Sum over the group; the denominator is the same for every $i$.</p></div>
   </div>
-
-  <!-- more steps -->
-
-  <div class="math-controls">
-    <button class="btn math-prev-btn">Previous</button>
-    <button class="btn math-next-btn">Next</button>
-    <button class="btn math-reset-btn">Restart</button>
-    <span class="math-progress"></span>
+  <div class="math-step">
+    <div class="math-equation">$$= 0 \qquad \square$$</div>
+    <div class="math-explanation"><p>Because $\sum_i r_i = G \operatorname{mean}(r)$: advantages within a group always cancel.</p></div>
   </div>
 </div>
 ```
 
 **Rules:**
-- Each step should explain ONE transformation or insight
-- The explanation should be in plain language, not just "taking the derivative"
-- KaTeX auto-renders `$$...$$` blocks; `main.js` re-renders when a new step becomes visible
-- Use `$...$` for inline math within explanations
+- One `.math-step` per line of the derivation or proof, in the paper's order. Continuation lines start with the relation (`$$= \dots$$`, `$$\le \dots$$`) so the left column reads as one chain.
+- The explanation names what justifies the line: the definition, equation, lemma or hypothesis used ("Unfold Definition 3 (Eq. 6)", "uses the hypothesis $g(f(\gamma)) = \gamma$"), in plain language. Say explicitly where each hypothesis of a theorem is used.
+- State the theorem in full (in the paper's words and notation) just above its proof, so statement and proof are read together.
+- Never add `style="display:none"` to steps; all lines are always shown.
+- Use `$...$` for inline math within explanations.
 
 ---
 

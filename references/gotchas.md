@@ -8,6 +8,10 @@
 
 The upstream skill shipped courses whose every widget was dead because one script error stopped `main.js`, and nobody opened the page. Always run `scripts/check-course.py` after `build.sh`, fix every FAIL, rebuild and re-run. A course is not done until it passes.
 
+### Paginated Proofs
+
+Showing a derivation or proof one step at a time with the other steps hidden. The argument falls apart into pages that mean nothing on their own. The derivation component shows all lines with their explanations; never hide steps with `display:none`, and put the full theorem statement right above its proof.
+
 ### Notation Drift
 
 Renaming the paper's symbols, writing them as plain text in one place and LaTeX in another, or labelling a diagram with names the reader cannot map back to the paper ("state 2", "s1", `x0`). Use the notation inventory; every symbol in prose, diagrams, explorers and quizzes must be one the paper uses or one you derived from it and introduced.

@@ -159,12 +159,14 @@ async () => {
 
   for (const d of $$('.math-derivation')) {
     const steps = $$('.math-step', d);
+    const hidden = steps.filter(s => !visible(s)).length;
+    if (hidden) errors.push(name(d, '.math-derivation') + `: ${hidden} of ${steps.length} lines are hidden; a derivation is shown whole`);
     const btn = d.querySelector('.math-next-btn');
-    if (steps.length < 2) continue;
-    if (!btn) { errors.push(name(d, '.math-derivation') + ': no next button'); continue; }
-    btn.click();
-    if (!visible(steps[1]) || visible(steps[0])) errors.push(name(d, '.math-derivation') + ': "next" did not advance to step 2');
-    const reset = d.querySelector('.math-reset-btn'); if (reset) reset.click();
+    if (btn) {
+      btn.click();
+      if (!d.querySelector('.math-step.current')) errors.push(name(d, '.math-derivation') + ': "next" highlighted no line');
+      const reset = d.querySelector('.math-reset-btn'); if (reset) reset.click();
+    }
     done.derivations = (done.derivations || 0) + 1;
   }
 
