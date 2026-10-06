@@ -1,6 +1,6 @@
 # Interactive Elements Reference
 
-Implementation patterns for every interactive element type used in paper-course tutorials.
+Implementation patterns for every interactive element type used in paper-to-course tutorials.
 
 > **Architecture note:** All CSS and JavaScript live in `references/styles.css` and `references/main.js`, copied verbatim into every course directory by `scripts/new-course.sh`. Write only the HTML patterns below: no inline `<style>` or `<script>` in module files. The single exception is an interactive explorer, whose behaviour lives in its own `explorers/<name>.js` file (see [Interactive Explorer](#interactive-explorer)).
 

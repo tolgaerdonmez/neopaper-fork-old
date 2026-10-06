@@ -1,9 +1,9 @@
 ---
-name: paper-course
+name: paper-to-course
 description: "Turn any academic paper into a beautiful, interactive HTML course with step-by-step LaTeX derivations, the paper's own notation, quizzes and small working simulations of the paper's mechanisms. Use this skill whenever someone wants to create a tutorial, course, or educational walkthrough from a research paper. Trigger when users mention: 'turn this paper into a course,' 'explain this paper interactively,' 'make a tutorial from this paper,' 'teach me this paper,' 'interactive walkthrough of this research,' 'convert this PDF to a tutorial.'"
 ---
 
-# Paper-Course
+# Paper-to-Course
 
 Turn any academic paper into a beautiful interactive course. The output is a **directory** containing the pre-built `styles.css`, `main.js`, a bundled copy of KaTeX, the HTML file for each module, optional explorer scripts, and the assembled `index.html`. It opens straight from disk in a browser; the only network dependency is Google Fonts, and the page still works without it.
 

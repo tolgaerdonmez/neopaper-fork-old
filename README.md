@@ -1,4 +1,6 @@
-# paper-course
+# paper-to-course
+
+*A fork of [ZeroxZhang/paper-to-course](https://github.com/ZeroxZhang/paper-to-course), extended and hardened. See [Credits](#credits).*
 
 **An agent skill that turns a research paper into an interactive, self-contained HTML course, written in the paper's own notation and checked in a real browser before it is called done.**
 
@@ -23,7 +25,7 @@ Give your agent a PDF or an arXiv link and ask it to "turn this paper into a cou
 
 ## Install
 
-Copy this directory into a location your agent loads skills from, for example a project's `.claude/skills/paper-course/` for Claude Code. Then ask:
+Copy this directory into a location your agent loads skills from, for example a project's `.claude/skills/paper-to-course/` for Claude Code. Then ask:
 
 > turn ./paper.pdf into a course
 
