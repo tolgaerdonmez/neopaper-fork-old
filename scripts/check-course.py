@@ -130,6 +130,11 @@ STATIC_CHECKS_JS = r"""
     });
   });
 
+  // Clickable non-native elements must stay clickable in Lavish's annotate mode
+  const clickable = $$('.sidebar-item, .course-cover-cta, .lineage-node, .term, .dnd-chip, .dnd-zone-target, .explorer-stage [data-action]');
+  const unmarked = clickable.filter(e => !e.hasAttribute('data-lavish-action'));
+  if (unmarked.length) errors.push(`${unmarked.length} clickable elements lack data-lavish-action, so Lavish's annotate mode swallows their clicks (first: ${unmarked[0].className})`);
+
   // Scrolling must stay native
   [document.documentElement, document.body].forEach(el => {
     const snap = getComputedStyle(el).scrollSnapType;

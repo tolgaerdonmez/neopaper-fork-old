@@ -43,6 +43,17 @@
   }
   function markReady(el) { if (el) el.setAttribute('data-pc-ready', '1'); }
 
+  // Courses are reviewed in Lavish Editor, whose annotate mode turns clicks
+  // on links and custom clickable elements into annotations. Native buttons,
+  // inputs and selects pass through on their own; everything else that is
+  // meant to be clicked carries data-lavish-action so it keeps working while
+  // the reader annotates. Harmless outside Lavish.
+  const CLICKABLE = '.sidebar-item, .course-cover-cta, .lineage-node, .term, .dnd-chip, .dnd-zone-target, .arch-component, .bug-line, .explorer-stage [data-action]';
+  function markClickable(root) {
+    $$(CLICKABLE, root).forEach(el => el.setAttribute('data-lavish-action', ''));
+  }
+  PC.markClickable = markClickable;
+
   /* ── UI STRINGS ───────────────────────────────────────────── */
   // English defaults. A course in another language overrides any subset with
   // <script type="application/json" id="course-ui">{...}</script> in _base.html.
@@ -857,6 +868,7 @@
         });
       }
       backBtn.disabled = history.length <= 1;
+      markClickable(stageEl);
       renderMath(stageEl);
       renderMath(checksEl);
       renderMath(logEl);
@@ -1011,6 +1023,8 @@
     if (document.readyState === 'complete') requestAnimationFrame(restore);
     else window.addEventListener('load', () => requestAnimationFrame(restore));
   });
+
+  safeInit('lavish pass-through', () => markClickable(document));
 
   PC.ready = true;
 })();

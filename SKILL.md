@@ -261,6 +261,8 @@ Rules:
 - Never run `lavish-axi share`: it publishes the course on a public third-party host. Do it only if the user explicitly asks to share it.
 - Lavish needs Node.js (`npx`). If `npx lavish-axi` cannot run, tell the user what is missing and give them the path to `index.html` as the fallback; do not install anything globally.
 - In a non-interactive run (no user can answer), still serve the course and report the URL, but do not start the blocking poll.
+- `main.js` marks the course's clickable non-button elements (sidebar links, lineage nodes, glossary terms, drag-and-drop, explorer stage elements) with `data-lavish-action`, so they keep working while the user is in Lavish's annotate mode. If you add another clickable element that is not a native `<button>`, `<input>` or `<select>`, give it `data-lavish-action` too.
+- Inside Lavish the course runs in a sandboxed frame without storage, so the course's own "keep my place on reload" cannot work there. Lavish restores the position itself after the live reloads your rebuilds trigger, but a full browser-tab reload returns to the top. Tell the user this if they ask; opening `index.html` directly keeps the position across reloads.
 
 ---
 
