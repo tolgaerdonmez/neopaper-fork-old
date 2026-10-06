@@ -19,6 +19,7 @@ Fails (exit 1) on:
   - emoji anywhere in the page text or tooltips
   - a callout component or any colored left-stripe box
   - scroll snapping, or an arrow-key handler that jumps the page
+  - losing the reader's position on reload
   - text clipped inside an SVG <foreignObject> label (box too small)
 Warns (exit 0) on: CJK text in a course whose lang is not zh/ja/ko,
 modules without any interactive element, missing cover page.
@@ -313,6 +314,19 @@ def main() -> int:
         static = page.evaluate(STATIC_CHECKS_JS)
         interaction = page.evaluate(INTERACTION_JS)
         page.wait_for_timeout(200)
+
+        # Reading position must survive a reload
+        page.evaluate("window.scrollTo({top: Math.round((document.documentElement.scrollHeight - innerHeight) * 0.6), behavior: 'instant'})")
+        page.wait_for_timeout(600)
+        before = page.evaluate("scrollY")
+        page.reload(wait_until="load")
+        page.wait_for_timeout(700)
+        after = page.evaluate("scrollY")
+        if before > 0 and abs(after - before) > 200:
+            interaction["errors"].append(f"reading position lost on reload (was at {round(before)}px, came back at {round(after)}px)")
+        page.evaluate("window.scrollTo({top: 0, behavior: 'instant'})")
+        page.wait_for_timeout(300)
+
         if args.screenshot or args.shots:
             page.evaluate("document.querySelectorAll('.animate-in').forEach(e => e.classList.add('visible'))")
             page.wait_for_timeout(300)

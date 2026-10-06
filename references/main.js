@@ -21,6 +21,7 @@
  *  - Result comparison
  *  - Research lineage tree
  *  - Interactive explorer (paper-specific simulations, see explorer-template.js)
+ *  - Reading position (kept across reloads)
  *
  * Every engine runs inside safeInit(): a failure in one widget is logged with
  * console.error (so scripts/check-course.py fails the build) but never stops
@@ -968,6 +969,47 @@
         if (!root.dataset.pcReady) console.error('[paper-to-course] explorer "' + root.dataset.explorer + '" was never mounted: is explorers/' + root.dataset.explorer + '.js missing or broken?');
       });
     });
+  });
+
+  /* ── READING POSITION ──────────────────────────────────────── */
+  // A reload (or a rebuild after review feedback) returns the reader to the
+  // screen they were reading. The position is stored as "screen N plus an
+  // offset into it", not raw pixels, so it survives layout changes, and it
+  // lives in this browser's localStorage only. Storage can be unavailable
+  // (private windows, blocked site data); then nothing is remembered.
+  safeInit('reading position', () => {
+    const key = 'paper-to-course:position:' + location.pathname + ':' + document.title;
+    const anchors = () => $$('.screen, .module, .course-cover');
+    let storage = null;
+    try { storage = window.localStorage; storage.getItem(key); } catch (e) { storage = null; }
+    if (!storage) return;
+    if ('scrollRestoration' in history) history.scrollRestoration = 'manual';
+
+    function save() {
+      const y = window.scrollY;
+      let idx = -1, offset = 0;
+      anchors().forEach((el, i) => {
+        const top = el.getBoundingClientRect().top + y;
+        if (top <= y + 1) { idx = i; offset = y - top; }
+      });
+      try { storage.setItem(key, JSON.stringify({ idx: idx, offset: Math.round(offset), y: Math.round(y) })); } catch (e) { /* storage full or blocked */ }
+    }
+
+    function restore() {
+      let saved = null;
+      try { saved = JSON.parse(storage.getItem(key) || 'null'); } catch (e) { saved = null; }
+      if (!saved) return;
+      const el = anchors()[saved.idx];
+      const y = el ? el.getBoundingClientRect().top + window.scrollY + saved.offset : saved.y;
+      window.scrollTo({ top: Math.max(0, y), behavior: 'instant' });
+    }
+
+    let timer = null;
+    window.addEventListener('scroll', () => { clearTimeout(timer); timer = setTimeout(save, 200); }, { passive: true });
+    window.addEventListener('pagehide', save);
+    // Restore after fonts, KaTeX and images have settled the layout.
+    if (document.readyState === 'complete') requestAnimationFrame(restore);
+    else window.addEventListener('load', () => requestAnimationFrame(restore));
   });
 
   PC.ready = true;
