@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="zh-CN">
+<html lang="COURSE_LANG">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -10,18 +10,10 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400;12..96,600;12..96,700;12..96,800&family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;1,9..40,400;1,9..40,500&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
 
-  <!-- KaTeX for math rendering -->
-  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.10/dist/katex.min.css">
-  <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.10/dist/katex.min.js"></script>
-  <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.10/dist/contrib/auto-render.min.js"
-    onload="renderMathInElement(document.body, {
-      delimiters: [
-        {left: '$$', right: '$$', display: true},
-        {left: '$', right: '$', display: false}
-      ],
-      throwOnError: false
-    });">
-  </script>
+  <!-- KaTeX, bundled locally in vendor/katex (no CDN). main.js renders all math. -->
+  <link rel="stylesheet" href="vendor/katex/katex.min.css">
+  <script defer src="vendor/katex/katex.min.js"></script>
+  <script defer src="vendor/katex/auto-render.min.js"></script>
 
   <link rel="stylesheet" href="styles.css">
 
@@ -42,6 +34,18 @@
       --color-accent-muted: ACCENT_MUTED;
     }
   </style>
+
+  <!--
+    UI STRINGS. Replace COURSE_UI_STRINGS with {} for an English course. For any
+    other output language, put a JSON object translating the keys, for example:
+    {"pickAnswer": "...", "correct": "...", "notQuite": "...", "step": "... {n} / {total}",
+     "explorerBack": "...", "explorerReset": "...", "explorerHistory": "...",
+     "explorerChecks": "...", "explorerNoSteps": "...", "explorerHolds": "...",
+     "explorerFails": "...", "explorerStart": "...", "dropHere": "...",
+     "found": "...", "notThisLine": "...", "flowStart": "..."}
+    Keys and English defaults live at the top of main.js.
+  -->
+  <script type="application/json" id="course-ui">COURSE_UI_STRINGS</script>
 
   <script src="main.js" defer></script>
 </head>
