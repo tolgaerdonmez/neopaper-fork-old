@@ -79,7 +79,7 @@ Every technical term gets a tooltip on first use per module. Be extremely aggres
 - Acronyms (GRPO, PPO, RLHF, LoRA) — ALWAYS tooltip on first use
 - Software/model names the learner might not know
 
-**Tooltip format (bilingual):** `中文解释（English Term）` — e.g., "策略梯度（Policy Gradient）：一种通过计算策略的梯度来更新模型参数的优化方法"
+**Tooltip format (bilingual):** `Explanation in the course language (English Term)` — e.g., "Policy Gradient: an optimization method that updates model parameters by computing the gradient of the policy"
 
 Do NOT tooltip terms the learner likely knows from general education (e.g., "hypothesis," "experiment," "control group").
 
@@ -113,6 +113,6 @@ Quizzes should test whether the learner can APPLY their knowledge, not regurgita
 - Anything answerable by scrolling up and copying
 
 **Quiz tone:**
-- Wrong answers get encouraging explanations ("不太对，原因是...")
-- Correct answers get brief reinforcement ("正确！这是因为...")
+- Wrong answers get encouraging explanations ("Not quite, because...")
+- Correct answers get brief reinforcement ("Correct! This is because...")
 - Never punitive, never score-focused

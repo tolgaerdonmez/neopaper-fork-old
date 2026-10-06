@@ -1,55 +1,55 @@
 ---
 name: paper-course
-description: "将任何学术论文转换为精美的交互式 HTML 教程，帮助读者全面理解论文内容及相关知识体系。Turn any academic paper into a beautiful, interactive HTML tutorial. Use this skill whenever someone wants to create a tutorial, course, or educational walkthrough from a research paper. Trigger when users mention: 'turn this paper into a course,' 'explain this paper interactively,' 'make a tutorial from this paper,' 'teach me this paper,' 'interactive walkthrough of this research,' 'convert this PDF to a tutorial,' '把论文变成教程,' '帮我读懂这篇论文,' '论文转课程,' '做一份论文教程.'"
+description: "Turn any academic paper into a beautiful, interactive HTML tutorial. Use this skill whenever someone wants to create a tutorial, course, or educational walkthrough from a research paper. Trigger when users mention: 'turn this paper into a course,' 'explain this paper interactively,' 'make a tutorial from this paper,' 'teach me this paper,' 'interactive walkthrough of this research,' 'convert this PDF to a tutorial.'"
 ---
 
 # Paper-to-Course
 
-将任何学术论文转换为精美的交互式教程。输出是一个**目录**，包含预构建的 `styles.css`、`main.js`、各模块 HTML 文件和组装后的 `index.html` —— 直接在浏览器中打开即可，唯一外部依赖是 Google Fonts CDN 和 KaTeX CDN。
+Turn any academic paper into a beautiful interactive tutorial. The output is a **directory** containing the pre-built `styles.css`, `main.js`, the HTML file for each module, and the assembled `index.html` -- just open it in a browser; the only external dependencies are the Google Fonts CDN and the KaTeX CDN.
 
 ## First-Run Welcome
 
 When the skill is first triggered and the user hasn't specified a paper yet:
 
-> **我可以把任何学术论文变成一份交互式教程，帮助你全面理解论文内容和背后的知识体系。**
+> **I can turn any academic paper into an interactive tutorial that helps you fully understand the paper and the body of knowledge behind it.**
 >
-> 只需要告诉我论文来源：
-> - **本地 PDF 文件** —— 例如 "把 ./paper.pdf 转成教程"
-> - **在线论文链接** —— 例如 "用 https://arxiv.org/abs/xxxx.xxxxx 做教程"
-> - **当前目录中的 PDF** —— 如果目录中有论文，直接说 "把这篇论文做成教程"
+> Just tell me where the paper is:
+> - **A local PDF file** -- e.g. "turn ./paper.pdf into a tutorial"
+> - **An online paper link** -- e.g. "make a tutorial from https://arxiv.org/abs/xxxx.xxxxx"
+> - **A PDF in the current directory** -- if there is a paper in the directory, just say "turn this paper into a tutorial"
 >
-> 我会深入阅读论文，梳理其中的知识脉络，然后生成一份精美的 HTML 教程，包含公式推导、实验对比、研究脉络图和交互式测验。整个教程在浏览器中运行，无需任何配置。
+> I will read the paper in depth, map out its line of knowledge, and then generate a beautiful HTML tutorial with equation derivations, experiment comparisons, a research lineage map, and interactive quizzes. The whole tutorial runs in the browser with no setup required.
 
 If the user provides an arXiv URL, construct the PDF URL: `https://arxiv.org/pdf/xxxx.xxxxx`. Use WebFetch or Read to get the content. If they provide a DOI, resolve it via WebFetch.
 
-## Language Strategy / 语言策略
+## Language Strategy
 
-**自动检测用户输入语言**（论文语言、用户消息语言），课程内容以该语言输出。
+**Automatically detect the user's input language** (the paper's language and the language of the user's message), and write the course content in that language.
 
-**如果无法检测，默认使用简体中文。**
+**If the language cannot be detected, default to Simplified Chinese.**
 
-术语提示（glossary tooltip）格式：`中文解释（English Term）` —— 同时提供中文解释和英文原文。
+Glossary tooltip format: `Explanation in the course language (English Term)` -- provide both an explanation in the course language and the original English term.
 
-课程中所有 UI 文本（按钮、进度指示器等）跟随课程内容语言。
+All UI text in the course (buttons, progress indicators, etc.) follows the language of the course content.
 
 ## Who This Is For
 
-目标学习者是"好奇的实践者" —— 在工作中遇到学术论文（AI/ML 论文之于工程师、医学论文之于临床医生、金融论文之于分析师），想要深入理解但不想花几小时和晦涩的术语搏斗的人。他们有一定的领域直觉，但缺乏论文子领域的系统训练。
+The target learner is the "curious practitioner" -- someone who runs into academic papers at work (AI/ML papers for engineers, medical papers for clinicians, finance papers for analysts) and wants to understand them deeply without spending hours wrestling with obscure terminology. They have some intuition for the field but lack systematic training in the paper's sub-field.
 
-**他们的目标：**
-- 理解论文的**实际贡献**（不只是摘要）
-- 评估结果是否有意义
-- 将论文与已知的工作联系起来
-- 能够与领域专家讨论这篇论文
-- 建立完整的知识体系，理解论文所涉及的整个学科脉络
+**Their goals:**
+- Understand the paper's **actual contribution** (not just the abstract)
+- Judge whether the results are meaningful
+- Connect the paper to work they already know
+- Be able to discuss the paper with domain experts
+- Build a complete body of knowledge and understand the whole disciplinary context the paper sits in
 
 ## Why This Approach Works
 
-传统论文阅读：从头到尾逐行阅读 → 被数学公式卡住 → 放弃或只记住摘要。
+Traditional paper reading: read line by line from start to finish → get stuck on the math → give up or remember only the abstract.
 
-本方法：**先建立直觉 → 理解问题背景 → 掌握前置知识 → 再看方法和公式 → 用实验验证理解 → 批判性思考**。
+This approach: **build intuition first → understand the problem background → master the prerequisites → then look at the method and equations → verify understanding with experiments → think critically**.
 
-每个模块先回答"为什么我应该关心这个？"，再讲"这是怎么工作的？"。先用日常语言解释概念，再引入数学形式化。
+Each module first answers "why should I care about this?", then "how does this work?". Concepts are explained in everyday language first, and mathematical formalism comes after.
 
 ---
 

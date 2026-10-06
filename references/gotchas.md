@@ -68,7 +68,7 @@ SVG without `viewBox` or with fixed `width`/`height` in pixels. Always use `view
 
 ### Language Inconsistency
 
-Mixing languages within a course. Once the output language is determined (default: 简体中文), ALL content should be in that language. Only technical terms keep their English originals in parentheses.
+Mixing languages within a course. Once the output language is determined (default: Simplified Chinese), ALL content should be in that language. Only technical terms keep their English originals in parentheses.
 
 ### Missing Cover Page
 
