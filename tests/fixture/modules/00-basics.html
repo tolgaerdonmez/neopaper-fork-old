@@ -1,0 +1,103 @@
+<section class="module" id="module-0">
+  <div class="module-content">
+    <header class="module-header animate-in">
+      <span class="module-number">00</span>
+      <h1 class="module-title">Basics</h1>
+      <p class="module-subtitle">Notation, a derivation, pseudocode and a quiz</p>
+    </header>
+
+    <div class="screen animate-in">
+      <h2 class="screen-heading">Notation</h2>
+      <p>We write the <span class="term" data-definition="Greatest common divisor: the largest integer $d$ with $d \mid a$ and $d \mid b$.">greatest common divisor</span> as $\gcd(a, b)$.</p>
+      <table class="notation-table">
+        <thead><tr><th>Symbol</th><th>Meaning</th><th>Defined in</th></tr></thead>
+        <tbody>
+          <tr><td>$a, b$</td><td>the two inputs</td><td class="notation-where">Section 1</td></tr>
+          <tr><td>$a \bmod b$</td><td>remainder of $a$ divided by $b$</td><td class="notation-where">Eq. (1)</td></tr>
+        </tbody>
+      </table>
+      <p class="key-idea"><span class="key-idea-label">Key idea</span>Replacing $(a, b)$ by $(b, a \bmod b)$ never changes the answer.</p>
+    </div>
+
+    <div class="screen animate-in">
+      <h2 class="screen-heading">Derivation</h2>
+      <div class="math-derivation" id="deriv-gcd">
+        <div class="math-step"><div class="math-equation">$$\gcd(a, b) = \gcd(b, a \bmod b)$$</div><div class="math-explanation"><p>Any common divisor of $a$ and $b$ divides $a - qb$.</p></div></div>
+        <div class="math-step"><div class="math-equation">$$\gcd(a, 0) = a$$</div><div class="math-explanation"><p>Everything divides $0$.</p></div></div>
+        <div class="math-controls">
+          <button class="btn math-prev-btn">Previous</button>
+          <button class="btn math-next-btn">Next</button>
+          <button class="btn math-reset-btn">Restart</button>
+          <span class="math-progress"></span>
+        </div>
+      </div>
+    </div>
+
+    <div class="screen animate-in">
+      <h2 class="screen-heading">Pseudocode, controls as next sibling (upstream layout)</h2>
+      <div class="pseudocode-translation" id="pseudo-sibling">
+        <div class="pseudocode-block">
+          <span class="translation-label">ALGORITHM</span>
+          <span class="pseudocode-line">WHILE $b \neq 0$</span>
+          <span class="pseudocode-line">  $(a, b) \gets (b, a \bmod b)$</span>
+          <span class="pseudocode-line">RETURN $a$</span>
+        </div>
+        <div class="pseudocode-explanation">
+          <span class="translation-label">EXPLANATION</span>
+          <div class="pseudocode-explanation-lines">
+            <p class="pe">Stop once the remainder is zero.</p>
+            <p class="pe">Shift and take the remainder.</p>
+            <p class="pe">The last non-zero value is the answer.</p>
+          </div>
+        </div>
+      </div>
+      <div class="pseudocode-controls">
+        <button class="btn pseudocode-prev-btn">Previous line</button>
+        <button class="btn pseudocode-next-btn">Next line</button>
+        <button class="btn pseudocode-reset-btn">Restart</button>
+        <span class="pseudocode-progress"></span>
+      </div>
+
+      <h2 class="screen-heading">Pseudocode, documented wrapper layout</h2>
+      <div class="pseudocode-walkthrough">
+        <div class="pseudocode-translation" id="pseudo-wrapped">
+          <div class="pseudocode-block">
+            <span class="translation-label">ALGORITHM</span>
+            <span class="pseudocode-line">INPUT $a, b$</span>
+            <span class="pseudocode-line">RETURN $\gcd(a, b)$</span>
+          </div>
+          <div class="pseudocode-explanation">
+            <span class="translation-label">EXPLANATION</span>
+            <div class="pseudocode-explanation-lines">
+              <p class="pe">Two integers.</p>
+              <p class="pe">Their greatest common divisor.</p>
+            </div>
+          </div>
+        </div>
+        <div class="pseudocode-controls">
+          <button class="btn pseudocode-prev-btn">Previous line</button>
+          <button class="btn pseudocode-next-btn">Next line</button>
+          <button class="btn pseudocode-reset-btn">Restart</button>
+          <span class="pseudocode-progress"></span>
+        </div>
+      </div>
+    </div>
+
+    <div class="screen animate-in">
+      <div class="quiz-container" id="quiz-0">
+        <div class="quiz-question-block" data-correct="b"
+             data-explanation-right="Yes: $\gcd(12, 0) = 12$."
+             data-explanation-wrong="Use $\gcd(a, 0) = a$.">
+          <h3 class="quiz-question">What is $\gcd(12, 0)$?</h3>
+          <div class="quiz-options">
+            <button class="quiz-option" data-value="a" onclick="selectOption(this)"><div class="quiz-option-radio"></div><span>$0$</span></button>
+            <button class="quiz-option" data-value="b" onclick="selectOption(this)"><div class="quiz-option-radio"></div><span>$12$</span></button>
+          </div>
+          <div class="quiz-feedback"></div>
+        </div>
+        <button class="quiz-check-btn" onclick="checkQuiz('quiz-0')">Check</button>
+        <button class="quiz-reset-btn" onclick="resetQuiz('quiz-0')">Retry</button>
+      </div>
+    </div>
+  </div>
+</section>
