@@ -18,6 +18,7 @@ Fails (exit 1) on:
     chat, quizzes, explorers, ablation tabs, metric toggles, tooltips)
   - emoji anywhere in the page text or tooltips
   - a callout component or any colored left-stripe box
+  - scroll snapping, or an arrow-key handler that jumps the page
   - text clipped inside an SVG <foreignObject> label (box too small)
 Warns (exit 0) on: CJK text in a course whose lang is not zh/ja/ko,
 modules without any interactive element, missing cover page.
@@ -126,6 +127,12 @@ STATIC_CHECKS_JS = r"""
           (mod ? ` in #${mod.id}` : '') + ': "' + (c.innerText || c.textContent).trim().replace(/\s+/g, ' ').slice(0, 60) + '"');
       }
     });
+  });
+
+  // Scrolling must stay native
+  [document.documentElement, document.body].forEach(el => {
+    const snap = getComputedStyle(el).scrollSnapType;
+    if (snap && snap !== 'none') errors.push(`scroll snapping on <${el.tagName.toLowerCase()}> (${snap}) makes long modules jump`);
   });
 
   // Language leakage
@@ -249,6 +256,18 @@ async () => {
       $$('.result-value', r).forEach(v => { if (!v.textContent.trim() || /NaN|undefined/.test(v.textContent)) errors.push('result comparison: bad value "' + v.textContent + '" for metric ' + m.dataset.metric); });
     }
     done.results = (done.results || 0) + 1;
+  }
+
+  // Arrow keys must scroll natively, not jump a whole module
+  {
+    const mid = Math.max(0, (document.documentElement.scrollHeight - innerHeight) / 2);
+    window.scrollTo({ top: mid, behavior: 'instant' });
+    await sleep(50);
+    const y0 = scrollY;
+    document.body.dispatchEvent(new KeyboardEvent('keydown', { key: 'ArrowDown', bubbles: true, cancelable: true }));
+    await sleep(700);
+    if (Math.abs(scrollY - y0) > innerHeight) errors.push(`ArrowDown moved the page ${Math.round(scrollY - y0)}px: a key handler is hijacking scrolling`);
+    window.scrollTo({ top: 0, behavior: 'instant' });
   }
 
   const term = document.querySelector('.term');

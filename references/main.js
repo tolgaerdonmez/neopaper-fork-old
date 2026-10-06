@@ -8,7 +8,6 @@
  *  - KaTeX rendering (bundled locally, see vendor/katex)
  *  - Navigation, progress bar and sidebar
  *  - Scroll-triggered reveal animations
- *  - Keyboard navigation
  *  - Glossary tooltips
  *  - Quiz (multiple-choice & scenario)
  *  - Drag-and-drop matching
@@ -201,30 +200,10 @@
     }
   });
 
-  /* ── KEYBOARD NAVIGATION ───────────────────────────────────── */
-  function currentModuleIndex() {
-    const scrollMid = window.scrollY + window.innerHeight / 2;
-    for (let i = 0; i < modules.length; i++) {
-      const top    = modules[i].offsetTop;
-      const bottom = top + modules[i].offsetHeight;
-      if (scrollMid >= top && scrollMid < bottom) return i;
-    }
-    return 0;
-  }
-
-  safeInit('keyboard navigation', () => {
-    document.addEventListener('keydown', e => {
-      if (['INPUT', 'TEXTAREA', 'SELECT', 'BUTTON'].includes(e.target.tagName)) return;
-      if (e.key === 'ArrowDown' || e.key === 'ArrowRight') {
-        const next = modules[currentModuleIndex() + 1];
-        if (next) { next.scrollIntoView({ behavior: 'smooth' }); e.preventDefault(); }
-      }
-      if (e.key === 'ArrowUp' || e.key === 'ArrowLeft') {
-        const prev = modules[currentModuleIndex() - 1];
-        if (prev) { prev.scrollIntoView({ behavior: 'smooth' }); e.preventDefault(); }
-      }
-    });
-  });
+  // No keyboard hijacking: upstream bound the arrow keys to jump a whole
+  // module, so ArrowDown skipped thousands of pixels of a long module. The
+  // browser's own arrow, Page and Space scrolling is what readers expect;
+  // the nav dots and sidebar handle module jumps.
 
   /* ── SCROLL-TRIGGERED REVEAL ───────────────────────────────── */
   safeInit('reveal animations', () => {

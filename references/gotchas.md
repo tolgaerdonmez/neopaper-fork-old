@@ -80,9 +80,9 @@ Math blocks that don't render because of LaTeX syntax errors. Common pitfalls:
 
 Writing pseudocode that looks like Python or C++. Pseudocode should be language-agnostic and readable by someone who does not program. Use `INPUT`, `OUTPUT`, `FOR EACH`, `IF...THEN` style. Exception: when the paper itself shows code (its own syntax or calculus), reproduce the paper's syntax exactly instead of translating it into pseudocode.
 
-### Scroll-Snap Mandatory
+### Fighting the Browser's Scrolling
 
-Using `scroll-snap-type: y mandatory` traps users inside long modules. Always use `proximity`.
+Scroll snapping (even `proximity`), global `scroll-behavior: smooth` and arrow-key handlers that jump between modules all make long modules feel jumpy or stuck. The shipped CSS and JS use native scrolling only; never add any of these back in module HTML, and the check fails if the page snaps or an arrow key moves more than a screen.
 
 ### Module Quality Degradation
 

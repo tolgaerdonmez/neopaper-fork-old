@@ -92,7 +92,7 @@ The course cover is a full-viewport landing page that appears before all modules
 ```
 
 **Rules:**
-- The cover is NOT a `.module` section — no `scroll-snap-align`, no module number
+- The cover is NOT a `.module` section — no module number
 - The "Start Learning" button scrolls to Module 0 (the prerequisites module)
 - Paper title should be in the course's output language, with the English original in parentheses if translated
 - Abstract is abbreviated to 2-3 sentences, not the full paper abstract

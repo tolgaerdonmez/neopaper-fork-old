@@ -127,9 +127,11 @@
 /* ── RESET & BASE ───────────────────────────────────────────── */
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
+/* Native scrolling only: no scroll snapping (it yanks the view on long
+   modules) and no global smooth scrolling (it makes wheel and keyboard
+   scrolling feel laggy). Anchor jumps leave room for the sticky nav. */
 html {
-  scroll-snap-type: y proximity;
-  scroll-behavior: smooth;
+  scroll-padding-top: calc(var(--nav-height) + var(--space-4));
 }
 
 body {
@@ -262,7 +264,6 @@ pre::-webkit-scrollbar { display: none; }
 
 /* ── MODULE STRUCTURE ───────────────────────────────────────── */
 .module {
-  scroll-snap-align: start;
   padding: var(--space-16) var(--space-6);
   padding-top: calc(var(--nav-height) + var(--space-12));
 }
