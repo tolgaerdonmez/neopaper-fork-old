@@ -1,10 +1,12 @@
 /**
- * PAPER-TO-COURSE — COMPLETE JS ENGINE
- * Copy this file verbatim into the course output directory.
+ * PAPER-COURSE — COMPLETE JS ENGINE
+ * Copied verbatim into the course output directory by scripts/new-course.sh.
  * Never regenerate it. It handles all interactivity generically.
  *
  * Engines included:
- *  - Navigation & progress bar
+ *  - UI strings (English defaults, overridable per course)
+ *  - KaTeX rendering (bundled locally, see vendor/katex)
+ *  - Navigation, progress bar and sidebar
  *  - Scroll-triggered reveal animations
  *  - Keyboard navigation
  *  - Glossary tooltips
@@ -15,11 +17,16 @@
  *  - Architecture diagram
  *  - "Spot the bug" / "Spot the assumption" challenge
  *  - Layer toggle / ablation toggle
- *  - KaTeX auto-render
  *  - Math derivation walkthrough
  *  - Pseudocode walkthrough
  *  - Result comparison
  *  - Research lineage tree
+ *  - Interactive explorer (paper-specific simulations, see explorer-template.js)
+ *
+ * Every engine runs inside safeInit(): a failure in one widget is logged with
+ * console.error (so scripts/check-course.py fails the build) but never stops
+ * the other widgets from initializing. Every initialized widget root gets
+ * data-pc-ready="1", which the checker uses to find dead widgets.
  */
 (function () {
   'use strict';
@@ -28,103 +35,94 @@
   function $(sel, ctx) { return (ctx || document).querySelector(sel); }
   function $$(sel, ctx) { return Array.from((ctx || document).querySelectorAll(sel)); }
 
-  /* ── KATEX AUTO-RENDER ────────────────────────────────────── */
-  function initKaTeX() {
-    if (typeof renderMathInElement === 'function') {
-      renderMathInElement(document.body, {
-        delimiters: [
-          {left: '$$', right: '$$', display: true},
-          {left: '$', right: '$', display: false}
-        ],
-        throwOnError: false
-      });
+  const PC = window.PaperCourse = window.PaperCourse || {};
+
+  function safeInit(name, fn) {
+    try { fn(); }
+    catch (e) { console.error('[paper-course] ' + name + ' failed to initialize:', e); }
+  }
+  function markReady(el) { if (el) el.setAttribute('data-pc-ready', '1'); }
+
+  /* ── UI STRINGS ───────────────────────────────────────────── */
+  // English defaults. A course in another language overrides any subset with
+  // <script type="application/json" id="course-ui">{...}</script> in _base.html.
+  const UI_DEFAULTS = {
+    pickAnswer:      'Pick an answer first.',
+    correct:         'Correct.',
+    notQuite:        'Not quite.',
+    found:           'Found it.',
+    notThisLine:     'Not this one, keep looking.',
+    dropHere:        'Drop here',
+    step:            'Step {n} / {total}',
+    flowStart:       'Press "Next" to start',
+    explorerBack:    'Step back',
+    explorerReset:   'Reset',
+    explorerHistory: 'History',
+    explorerChecks:  'Checks',
+    explorerNoSteps: 'No actions yet.',
+    explorerHolds:   'holds',
+    explorerFails:   'fails',
+    explorerStart:   'start'
+  };
+  const UI = Object.assign({}, UI_DEFAULTS);
+  safeInit('UI strings', () => {
+    const el = document.getElementById('course-ui');
+    if (el && el.textContent.trim()) Object.assign(UI, JSON.parse(el.textContent));
+  });
+  function t(key, vars) {
+    let s = UI[key] != null ? String(UI[key]) : key;
+    if (vars) Object.keys(vars).forEach(k => { s = s.split('{' + k + '}').join(vars[k]); });
+    return s;
+  }
+  PC.t = t;
+
+  /* ── KATEX ────────────────────────────────────────────────── */
+  const KATEX_OPTS = {
+    delimiters: [
+      { left: '$$', right: '$$', display: true },
+      { left: '\\[', right: '\\]', display: true },
+      { left: '$', right: '$', display: false },
+      { left: '\\(', right: '\\)', display: false }
+    ],
+    // Parse errors are reported (console.error fails the browser check) and
+    // the source is left visible, instead of being silently drawn in red.
+    throwOnError: true,
+    errorCallback: function (msg, err) {
+      console.error('[paper-course] KaTeX could not parse: ' + msg + ' ' + (err && err.message ? err.message : ''));
+    }
+  };
+  function renderMath(el) {
+    if (el && typeof window.renderMathInElement === 'function') {
+      window.renderMathInElement(el, KATEX_OPTS);
     }
   }
-  // KaTeX is loaded via _base.html with defer + onload, but also try on DOMContentLoaded
-  document.addEventListener('DOMContentLoaded', function() {
-    setTimeout(initKaTeX, 100);
+  PC.renderMath = renderMath;
+  safeInit('KaTeX', () => {
+    if (typeof window.renderMathInElement !== 'function') {
+      console.error('[paper-course] KaTeX is not loaded: check that vendor/katex/ was copied next to index.html.');
+      return;
+    }
+    renderMath(document.body);
   });
 
-  /* ── NAVIGATION & PROGRESS BAR ────────────────────────────── */
-  const progressBar = $('#progress-bar');
-  const navDots     = $$('.nav-dot');
-  const modules     = $$('.module');
-
-  function updateProgress() {
-    if (!progressBar) return;
-    const scrollTop    = window.scrollY;
-    const scrollHeight = document.documentElement.scrollHeight - window.innerHeight;
-    const pct          = scrollHeight > 0 ? (scrollTop / scrollHeight) * 100 : 0;
-    progressBar.style.width = pct + '%';
-    progressBar.setAttribute('aria-valuenow', Math.round(pct));
-    updateNavDots();
-    updateSidebar();
-  }
-
-  function updateNavDots() {
-    const scrollMid = window.scrollY + window.innerHeight / 2;
-    modules.forEach((mod, i) => {
-      const dot = navDots[i];
-      if (!dot) return;
-      const top    = mod.offsetTop;
-      const bottom = top + mod.offsetHeight;
-      if (scrollMid >= top && scrollMid < bottom) {
-        dot.classList.add('active');
-        dot.classList.remove('visited');
-      } else if (window.scrollY + window.innerHeight > top) {
-        dot.classList.remove('active');
-        dot.classList.add('visited');
-      } else {
-        dot.classList.remove('active', 'visited');
-      }
-    });
-  }
-
-  window.addEventListener('scroll', () => requestAnimationFrame(updateProgress), { passive: true });
-  updateProgress();
-
-  navDots.forEach(dot => {
-    dot.addEventListener('click', () => {
-      const target = $('#' + dot.dataset.target);
-      if (target) target.scrollIntoView({ behavior: 'smooth' });
-    });
-  });
-
-  /* ── KEYBOARD NAVIGATION ───────────────────────────────────── */
-  function currentModuleIndex() {
-    const scrollMid = window.scrollY + window.innerHeight / 2;
-    for (let i = 0; i < modules.length; i++) {
-      const top    = modules[i].offsetTop;
-      const bottom = top + modules[i].offsetHeight;
-      if (scrollMid >= top && scrollMid < bottom) return i;
-    }
-    return 0;
-  }
-
-  document.addEventListener('keydown', e => {
-    if (['INPUT', 'TEXTAREA', 'SELECT'].includes(e.target.tagName)) return;
-    if (e.key === 'ArrowDown' || e.key === 'ArrowRight') {
-      const next = modules[currentModuleIndex() + 1];
-      if (next) { next.scrollIntoView({ behavior: 'smooth' }); e.preventDefault(); }
-    }
-    if (e.key === 'ArrowUp' || e.key === 'ArrowLeft') {
-      const prev = modules[currentModuleIndex() - 1];
-      if (prev) { prev.scrollIntoView({ behavior: 'smooth' }); e.preventDefault(); }
-    }
-  });
-
-  /* ── SIDEBAR NAVIGATION ────────────────────────────────────── */
-  const sidebarItems = $$('.sidebar-item');
+  /* ── NAVIGATION, PROGRESS BAR & SIDEBAR ───────────────────── */
+  // All lookups happen before the first updateProgress() call. Upstream
+  // declared sidebarItems after that call, which threw a TDZ ReferenceError
+  // and killed every engine below it.
+  const progressBar   = $('#progress-bar');
+  const navDots       = $$('.nav-dot');
+  const modules       = $$('.module');
+  const sidebarItems  = $$('.sidebar-item');
   const sidebarToggle = $('#sidebar-toggle');
-  const sidebar = $('#sidebar');
-  let sidebarOverlay = null;
+  const sidebar       = $('#sidebar');
+  let sidebarOverlay  = null;
 
-  function updateSidebar() {
+  function markCurrent(items) {
     const scrollMid = window.scrollY + window.innerHeight / 2;
     modules.forEach((mod, i) => {
-      const item = sidebarItems[i];
+      const item = items[i];
       if (!item) return;
-      const top = mod.offsetTop;
+      const top    = mod.offsetTop;
       const bottom = top + mod.offsetHeight;
       if (scrollMid >= top && scrollMid < bottom) {
         item.classList.add('active');
@@ -138,13 +136,23 @@
     });
   }
 
-  sidebarItems.forEach(item => {
-    item.addEventListener('click', () => {
-      const target = $(item.getAttribute('href'));
-      if (target) target.scrollIntoView({ behavior: 'smooth' });
-      if (window.innerWidth <= 1024) closeSidebar();
-    });
-  });
+  function updateProgress() {
+    if (progressBar) {
+      const scrollHeight = document.documentElement.scrollHeight - window.innerHeight;
+      const pct = scrollHeight > 0 ? (window.scrollY / scrollHeight) * 100 : 0;
+      progressBar.style.width = pct + '%';
+      progressBar.setAttribute('aria-valuenow', Math.round(pct));
+    }
+    markCurrent(navDots);
+    markCurrent(sidebarItems);
+  }
+
+  function closeSidebar() {
+    if (!sidebar) return;
+    sidebar.classList.remove('open');
+    if (sidebarToggle) sidebarToggle.setAttribute('aria-expanded', 'false');
+    if (sidebarOverlay) sidebarOverlay.classList.remove('visible');
+  }
 
   function openSidebar() {
     if (!sidebar) return;
@@ -159,46 +167,79 @@
     sidebarOverlay.classList.add('visible');
   }
 
-  function closeSidebar() {
-    if (!sidebar) return;
-    sidebar.classList.remove('open');
-    if (sidebarToggle) sidebarToggle.setAttribute('aria-expanded', 'false');
-    if (sidebarOverlay) sidebarOverlay.classList.remove('visible');
-  }
+  safeInit('navigation', () => {
+    window.addEventListener('scroll', () => requestAnimationFrame(updateProgress), { passive: true });
+    updateProgress();
 
-  if (sidebarToggle) {
-    sidebarToggle.addEventListener('click', () => {
-      sidebar.classList.contains('open') ? closeSidebar() : openSidebar();
+    navDots.forEach(dot => {
+      dot.addEventListener('click', () => {
+        const target = document.getElementById(dot.dataset.target);
+        if (target) target.scrollIntoView({ behavior: 'smooth' });
+      });
     });
-  }
 
-  /* ── COVER CTA ─────────────────────────────────────────────── */
-  const coverCta = $('.course-cover-cta');
-  if (coverCta) {
-    coverCta.addEventListener('click', e => {
-      e.preventDefault();
-      const firstModule = modules[0];
-      if (firstModule) firstModule.scrollIntoView({ behavior: 'smooth' });
+    sidebarItems.forEach(item => {
+      item.addEventListener('click', e => {
+        const target = $(item.getAttribute('href'));
+        if (target) { e.preventDefault(); target.scrollIntoView({ behavior: 'smooth' }); }
+        if (window.innerWidth <= 1024) closeSidebar();
+      });
     });
+
+    if (sidebarToggle) {
+      sidebarToggle.addEventListener('click', () => {
+        sidebar && sidebar.classList.contains('open') ? closeSidebar() : openSidebar();
+      });
+    }
+
+    const coverCta = $('.course-cover-cta');
+    if (coverCta) {
+      coverCta.addEventListener('click', e => {
+        e.preventDefault();
+        if (modules[0]) modules[0].scrollIntoView({ behavior: 'smooth' });
+      });
+    }
+  });
+
+  /* ── KEYBOARD NAVIGATION ───────────────────────────────────── */
+  function currentModuleIndex() {
+    const scrollMid = window.scrollY + window.innerHeight / 2;
+    for (let i = 0; i < modules.length; i++) {
+      const top    = modules[i].offsetTop;
+      const bottom = top + modules[i].offsetHeight;
+      if (scrollMid >= top && scrollMid < bottom) return i;
+    }
+    return 0;
   }
 
-  /* ── SCROLL-TRIGGERED REVEAL ───────────────────────────────── */
-  document.body.classList.add('js-reveal');
-
-  const revealObserver = new IntersectionObserver(entries => {
-    entries.forEach(entry => {
-      if (entry.isIntersecting) {
-        entry.target.classList.add('visible');
-        revealObserver.unobserve(entry.target);
+  safeInit('keyboard navigation', () => {
+    document.addEventListener('keydown', e => {
+      if (['INPUT', 'TEXTAREA', 'SELECT', 'BUTTON'].includes(e.target.tagName)) return;
+      if (e.key === 'ArrowDown' || e.key === 'ArrowRight') {
+        const next = modules[currentModuleIndex() + 1];
+        if (next) { next.scrollIntoView({ behavior: 'smooth' }); e.preventDefault(); }
+      }
+      if (e.key === 'ArrowUp' || e.key === 'ArrowLeft') {
+        const prev = modules[currentModuleIndex() - 1];
+        if (prev) { prev.scrollIntoView({ behavior: 'smooth' }); e.preventDefault(); }
       }
     });
-  }, { rootMargin: '0px', threshold: 0 });
+  });
 
-  $$('.animate-in').forEach(el => revealObserver.observe(el));
-
-  $$('.stagger-children').forEach(parent => {
-    Array.from(parent.children).forEach((child, i) => {
-      child.style.setProperty('--stagger-index', i);
+  /* ── SCROLL-TRIGGERED REVEAL ───────────────────────────────── */
+  safeInit('reveal animations', () => {
+    document.body.classList.add('js-reveal');
+    const revealObserver = new IntersectionObserver(entries => {
+      entries.forEach(entry => {
+        if (entry.isIntersecting) {
+          entry.target.classList.add('visible');
+          revealObserver.unobserve(entry.target);
+        }
+      });
+    }, { rootMargin: '0px', threshold: 0 });
+    $$('.animate-in').forEach(el => revealObserver.observe(el));
+    $$('.stagger-children').forEach(parent => {
+      Array.from(parent.children).forEach((child, i) => child.style.setProperty('--stagger-index', i));
     });
   });
 
@@ -239,22 +280,41 @@
     if (activeTooltip === tip) activeTooltip = null;
   }
 
-  $$('.term').forEach(term => {
-    const tip = document.createElement('span');
-    tip.className = 'term-tooltip';
-    tip.textContent = term.dataset.definition;
-
-    term.addEventListener('mouseenter', () => showTooltip(term, tip));
-    term.addEventListener('mouseleave', () => hideTooltip(tip));
-    term.addEventListener('click', e => {
-      e.stopPropagation();
-      tip.classList.contains('visible') ? hideTooltip(tip) : showTooltip(term, tip);
+  safeInit('glossary tooltips', () => {
+    $$('.term').forEach(term => {
+      const tip = document.createElement('span');
+      tip.className = 'term-tooltip';
+      tip.textContent = term.dataset.definition || '';
+      renderMath(tip); // definitions may contain $...$
+      term.addEventListener('mouseenter', () => showTooltip(term, tip));
+      term.addEventListener('mouseleave', () => hideTooltip(tip));
+      term.addEventListener('click', e => {
+        e.stopPropagation();
+        tip.classList.contains('visible') ? hideTooltip(tip) : showTooltip(term, tip);
+      });
+      markReady(term);
+    });
+    document.addEventListener('click', () => {
+      if (activeTooltip) { activeTooltip.classList.remove('visible'); activeTooltip.remove(); activeTooltip = null; }
     });
   });
 
-  document.addEventListener('click', () => {
-    if (activeTooltip) { activeTooltip.classList.remove('visible'); activeTooltip.remove(); activeTooltip = null; }
-  });
+  /* ── FEEDBACK HELPER ───────────────────────────────────────── */
+  function setFeedback(el, baseClass, kind, lead, text) {
+    if (!el) return;
+    el.textContent = '';
+    if (lead) {
+      const strong = document.createElement('strong');
+      strong.textContent = lead;
+      el.appendChild(strong);
+      el.appendChild(document.createTextNode(' '));
+    }
+    const span = document.createElement('span');
+    span.textContent = text || '';
+    el.appendChild(span);
+    renderMath(el);
+    el.className = baseClass + ' show ' + kind;
+  }
 
   /* ── QUIZ ENGINE ───────────────────────────────────────────── */
   window.selectOption = function (btn) {
@@ -264,38 +324,28 @@
   };
 
   window.checkQuiz = function (containerId) {
-    const container = $('#' + containerId);
-    if (!container) return;
+    const container = document.getElementById(containerId);
+    if (!container) { console.error('[paper-course] checkQuiz: no element #' + containerId); return; }
     $$('.quiz-question-block', container).forEach(q => {
-      const selected  = $('.quiz-option.selected', q);
-      const feedback  = $('.quiz-feedback', q);
-      const correct   = q.dataset.correct;
-      const rightExp  = q.dataset.explanationRight  || '';
-      const wrongExp  = q.dataset.explanationWrong  || '';
-
-      if (!selected) {
-        feedback.textContent = '请先选择一个答案！';
-        feedback.className = 'quiz-feedback show warning';
-        return;
-      }
+      const selected = $('.quiz-option.selected', q);
+      const feedback = $('.quiz-feedback', q);
+      const correct  = q.dataset.correct;
+      if (!selected) { setFeedback(feedback, 'quiz-feedback', 'warning', '', t('pickAnswer')); return; }
       $$('.quiz-option', q).forEach(o => o.disabled = true);
-
       if (selected.dataset.value === correct) {
         selected.classList.add('correct');
-        feedback.innerHTML = '<strong>正确！</strong> ' + rightExp;
-        feedback.className = 'quiz-feedback show success';
+        setFeedback(feedback, 'quiz-feedback', 'success', t('correct'), q.dataset.explanationRight);
       } else {
         selected.classList.add('incorrect');
         const correctBtn = $(`.quiz-option[data-value="${correct}"]`, q);
         if (correctBtn) correctBtn.classList.add('correct');
-        feedback.innerHTML = '<strong>不太对。</strong> ' + wrongExp;
-        feedback.className = 'quiz-feedback show error';
+        setFeedback(feedback, 'quiz-feedback', 'error', t('notQuite'), q.dataset.explanationWrong);
       }
     });
   };
 
   window.resetQuiz = function (containerId) {
-    const container = $('#' + containerId);
+    const container = document.getElementById(containerId);
     if (!container) return;
     $$('.quiz-option', container).forEach(o => {
       o.classList.remove('selected', 'correct', 'incorrect');
@@ -304,23 +354,24 @@
     $$('.quiz-feedback', container).forEach(f => { f.className = 'quiz-feedback'; f.textContent = ''; });
   };
 
+  safeInit('quizzes', () => $$('.quiz-container').forEach(markReady));
+
   /* ── DRAG-AND-DROP ENGINE ──────────────────────────────────── */
+  function placeChip(target, chip, answer) {
+    target.innerHTML = chip.innerHTML; // keeps rendered math
+    target.dataset.placed = answer;
+    target.classList.remove('correct-placed', 'incorrect-placed');
+    chip.classList.add('placed');
+  }
+
   function initDnD(containerEl) {
-    if (!containerEl) return;
     const chips = $$('.dnd-chip', containerEl);
     const zones = $$('.dnd-zone', containerEl);
-
-    chips.forEach(chip => {
-      chip.addEventListener('dragstart', e => {
-        e.dataTransfer.setData('text/plain', chip.dataset.answer);
-        chip.classList.add('dragging');
-      });
-      chip.addEventListener('dragend', () => chip.classList.remove('dragging'));
-    });
 
     zones.forEach(zone => {
       const target = $('.dnd-zone-target', zone);
       if (!target) return;
+      target.dataset.placeholder = target.textContent.trim() || t('dropHere');
       target.addEventListener('dragover',  e => { e.preventDefault(); target.classList.add('drag-over'); });
       target.addEventListener('dragleave', ()  => target.classList.remove('drag-over'));
       target.addEventListener('drop', e => {
@@ -328,14 +379,17 @@
         target.classList.remove('drag-over');
         const answer = e.dataTransfer.getData('text/plain');
         const chip   = $(`.dnd-chip[data-answer="${answer}"]`, containerEl);
-        if (!chip) return;
-        target.textContent    = chip.textContent;
-        target.dataset.placed = answer;
-        chip.classList.add('placed');
+        if (chip) placeChip(target, chip, answer);
       });
     });
 
     chips.forEach(chip => {
+      chip.addEventListener('dragstart', e => {
+        e.dataTransfer.setData('text/plain', chip.dataset.answer);
+        chip.classList.add('dragging');
+      });
+      chip.addEventListener('dragend', () => chip.classList.remove('dragging'));
+
       chip.addEventListener('touchstart', e => {
         e.preventDefault();
         const touch = e.touches[0];
@@ -343,8 +397,7 @@
         ghost.classList.add('touch-ghost');
         ghost.style.cssText = `position:fixed;z-index:9999;pointer-events:none;left:${touch.clientX - 40}px;top:${touch.clientY - 20}px;`;
         document.body.appendChild(ghost);
-        chip._ghost  = ghost;
-        chip._answer = chip.dataset.answer;
+        chip._ghost = ghost;
       }, { passive: false });
 
       chip.addEventListener('touchmove', e => {
@@ -354,7 +407,7 @@
           chip._ghost.style.left = (touch.clientX - 40) + 'px';
           chip._ghost.style.top  = (touch.clientY - 20) + 'px';
         }
-        zones.forEach(z => { const t = $('.dnd-zone-target', z); if (t) t.classList.remove('drag-over'); });
+        zones.forEach(z => { const tg = $('.dnd-zone-target', z); if (tg) tg.classList.remove('drag-over'); });
         const el = document.elementFromPoint(touch.clientX, touch.clientY);
         const zt = el && el.closest('.dnd-zone-target');
         if (zt) zt.classList.add('drag-over');
@@ -365,99 +418,88 @@
         const touch = e.changedTouches[0];
         const el    = document.elementFromPoint(touch.clientX, touch.clientY);
         const zt    = el && el.closest('.dnd-zone-target');
-        if (zt) {
-          zt.textContent    = chip.textContent;
-          zt.dataset.placed = chip._answer;
-          chip.classList.add('placed');
-        }
-        zones.forEach(z => { const t = $('.dnd-zone-target', z); if (t) t.classList.remove('drag-over'); });
+        if (zt && containerEl.contains(zt)) placeChip(zt, chip, chip.dataset.answer);
+        zones.forEach(z => { const tg = $('.dnd-zone-target', z); if (tg) tg.classList.remove('drag-over'); });
       });
     });
+    markReady(containerEl);
   }
 
   window.checkDnD = function (containerId) {
-    const container = $('#' + containerId);
-    if (!container) return;
+    const container = document.getElementById(containerId);
+    if (!container) { console.error('[paper-course] checkDnD: no element #' + containerId); return; }
     $$('.dnd-zone', container).forEach(zone => {
-      const target  = $('.dnd-zone-target', zone);
+      const target = $('.dnd-zone-target', zone);
       if (!target || !target.dataset.placed) return;
-      if (target.dataset.placed === zone.dataset.correct) {
-        target.classList.add('correct-placed');
-      } else {
-        target.classList.add('incorrect-placed');
-      }
+      target.classList.add(target.dataset.placed === zone.dataset.correct ? 'correct-placed' : 'incorrect-placed');
     });
   };
 
   window.resetDnD = function (containerId) {
-    const container = $('#' + containerId);
+    const container = document.getElementById(containerId);
     if (!container) return;
-    $$('.dnd-zone-target', container).forEach(t => {
-      t.textContent = '拖放到这里';
-      delete t.dataset.placed;
-      t.classList.remove('correct-placed', 'incorrect-placed');
+    $$('.dnd-zone-target', container).forEach(tg => {
+      tg.textContent = tg.dataset.placeholder || t('dropHere');
+      delete tg.dataset.placed;
+      tg.classList.remove('correct-placed', 'incorrect-placed');
     });
     $$('.dnd-chip', container).forEach(c => c.classList.remove('placed', 'dragging'));
   };
 
-  $$('.dnd-container').forEach(el => initDnD(el));
+  safeInit('drag-and-drop', () => $$('.dnd-container').forEach(el => safeInit('drag-and-drop #' + el.id, () => initDnD(el))));
 
   /* ── GROUP CHAT / RESEARCH DIALOGUE ENGINE ─────────────────── */
   function initChat(containerEl) {
-    if (!containerEl) return;
-    const messages    = $$('.chat-message', containerEl);
-    const typingEl    = $('.chat-typing', containerEl);
-    const typingAvEl  = $('#' + containerEl.id + '-typing-avatar') || $('.chat-avatar', typingEl);
-    const progressEl  = $('.chat-progress', containerEl);
+    const messages   = $$('.chat-message', containerEl);
+    const typingEl   = $('.chat-typing', containerEl);
+    const typingAvEl = (containerEl.id && document.getElementById(containerEl.id + '-typing-avatar')) || (typingEl && $('.chat-avatar', typingEl));
+    const progressEl = $('.chat-progress', containerEl);
     let index = 0;
+    let timer = null;
 
     const actors = {};
     messages.forEach(msg => {
       const sender = msg.dataset.sender;
       const avatar = $('.chat-avatar', msg);
-      if (avatar && !actors[sender]) {
-        actors[sender] = { initial: avatar.textContent.trim(), style: avatar.style.background };
-      }
+      if (avatar && !actors[sender]) actors[sender] = { initial: avatar.textContent.trim(), style: avatar.style.background };
     });
 
-    function updateProgress() {
-      if (progressEl) progressEl.textContent = index + ' / ' + messages.length;
-    }
+    function updateChatProgress() { if (progressEl) progressEl.textContent = index + ' / ' + messages.length; }
 
     function showNext() {
       if (index >= messages.length) return;
       const msg    = messages[index];
       const sender = msg.dataset.sender;
-
+      index++;
       if (typingEl && actors[sender]) {
         if (typingAvEl) {
-          typingAvEl.textContent       = actors[sender].initial;
-          typingAvEl.style.background  = actors[sender].style;
+          typingAvEl.textContent      = actors[sender].initial;
+          typingAvEl.style.background = actors[sender].style;
         }
         typingEl.style.display = 'flex';
       }
-
       setTimeout(() => {
         if (typingEl) typingEl.style.display = 'none';
         msg.style.display = 'flex';
         msg.style.animation = 'fadeSlideUp 0.3s var(--ease-out)';
-        index++;
-        updateProgress();
-      }, 800);
+        updateChatProgress();
+      }, 600);
     }
 
     function showAll() {
-      const iv = setInterval(() => {
-        if (index >= messages.length) { clearInterval(iv); return; }
+      clearInterval(timer);
+      timer = setInterval(() => {
+        if (index >= messages.length) { clearInterval(timer); return; }
         showNext();
-      }, 1200);
+      }, 900);
     }
 
     function reset() {
+      clearInterval(timer);
       index = 0;
       messages.forEach(m => { m.style.display = 'none'; m.style.animation = ''; });
       if (typingEl) typingEl.style.display = 'none';
-      updateProgress();
+      updateChatProgress();
     }
 
     const nextBtn  = $('.chat-next-btn',  containerEl);
@@ -466,45 +508,40 @@
     if (nextBtn)  nextBtn.addEventListener('click',  showNext);
     if (allBtn)   allBtn.addEventListener('click',   showAll);
     if (resetBtn) resetBtn.addEventListener('click', reset);
-
-    updateProgress();
+    updateChatProgress();
+    markReady(containerEl);
   }
 
-  $$('.chat-window').forEach(el => initChat(el));
+  safeInit('chat', () => $$('.chat-window').forEach(el => safeInit('chat #' + el.id, () => initChat(el))));
 
   /* ── FLOW ANIMATION ENGINE ─────────────────────────────────── */
   function initFlow(containerEl) {
-    if (!containerEl) return;
     const stepsData  = JSON.parse(containerEl.dataset.steps || '[]');
     const labelEl    = $('.flow-step-label', containerEl);
     const progressEl = $('.flow-progress',   containerEl);
     const packet     = $('.flow-packet',     containerEl);
     let step = 0;
 
-    function updateProgress() {
-      if (progressEl) progressEl.textContent = '步骤 ' + step + ' / ' + stepsData.length;
+    function updateFlowProgress() {
+      if (progressEl) progressEl.textContent = t('step', { n: step, total: stepsData.length });
     }
 
     function animatePacket(fromId, toId) {
       if (!packet) return;
-      const fromEl = $('#' + fromId);
-      const toEl   = $('#' + toId);
+      const fromEl = document.getElementById(fromId);
+      const toEl   = document.getElementById(toId);
       if (!fromEl || !toEl) return;
       const fromR = fromEl.getBoundingClientRect();
       const toR   = toEl.getBoundingClientRect();
       const contR = containerEl.getBoundingClientRect();
-      const fx = fromR.left + fromR.width / 2  - contR.left;
-      const fy = fromR.top  + fromR.height / 2 - contR.top;
-      const tx = toR.left   + toR.width / 2    - contR.left;
-      const ty = toR.top    + toR.height / 2   - contR.top;
-      packet.style.setProperty('--packet-from-x', fx + 'px');
-      packet.style.setProperty('--packet-from-y', fy + 'px');
-      packet.style.setProperty('--packet-to-x',   tx + 'px');
-      packet.style.setProperty('--packet-to-y',   ty + 'px');
-      packet.style.display    = 'block';
-      packet.style.animation  = 'none';
-      packet.offsetHeight;
-      packet.style.animation  = 'packetMove 0.8s var(--ease-in-out) forwards';
+      packet.style.setProperty('--packet-from-x', (fromR.left + fromR.width / 2  - contR.left) + 'px');
+      packet.style.setProperty('--packet-from-y', (fromR.top  + fromR.height / 2 - contR.top) + 'px');
+      packet.style.setProperty('--packet-to-x',   (toR.left   + toR.width / 2    - contR.left) + 'px');
+      packet.style.setProperty('--packet-to-y',   (toR.top    + toR.height / 2   - contR.top) + 'px');
+      packet.style.display   = 'block';
+      packet.style.animation = 'none';
+      void packet.offsetHeight;
+      packet.style.animation = 'packetMove 0.8s var(--ease-in-out) forwards';
       setTimeout(() => { packet.style.display = 'none'; }, 850);
     }
 
@@ -513,69 +550,66 @@
       const s = stepsData[step];
       $$('.flow-actor', containerEl).forEach(a => a.classList.remove('active'));
       if (s.highlight) {
-        const hEl = $('#' + s.highlight, containerEl) || $('#flow-' + s.highlight);
+        const hEl = $('#' + s.highlight, containerEl) || document.getElementById('flow-' + s.highlight);
         if (hEl) hEl.classList.add('active');
       }
       if (s.packet && s.from && s.to) animatePacket('flow-' + s.from, 'flow-' + s.to);
-      if (labelEl) labelEl.textContent = s.label || '';
+      if (labelEl) { labelEl.textContent = s.label || ''; renderMath(labelEl); }
       step++;
-      updateProgress();
+      updateFlowProgress();
     }
 
     function reset() {
       step = 0;
       $$('.flow-actor', containerEl).forEach(a => a.classList.remove('active'));
-      if (labelEl) labelEl.textContent = '点击"下一步"开始';
+      if (labelEl) labelEl.textContent = t('flowStart');
       if (packet)  packet.style.display = 'none';
-      updateProgress();
+      updateFlowProgress();
     }
 
     const nextBtn  = $('.flow-next-btn',  containerEl);
     const resetBtn = $('.flow-reset-btn', containerEl);
     if (nextBtn)  nextBtn.addEventListener('click',  next);
     if (resetBtn) resetBtn.addEventListener('click', reset);
-
-    updateProgress();
+    updateFlowProgress();
+    markReady(containerEl);
   }
 
-  $$('.flow-animation').forEach(el => initFlow(el));
+  safeInit('flow animation', () => $$('.flow-animation').forEach(el => safeInit('flow animation #' + el.id, () => initFlow(el))));
 
   /* ── ARCHITECTURE DIAGRAM ──────────────────────────────────── */
-  $$('.arch-component').forEach(comp => {
-    comp.addEventListener('click', function () {
-      const diagram = this.closest('.arch-diagram');
-      $$('.arch-component', diagram).forEach(c => c.classList.remove('active'));
-      this.classList.add('active');
-      const descEl = $('.arch-description', diagram);
-      if (descEl) descEl.textContent = this.dataset.desc || '';
+  safeInit('architecture diagram', () => {
+    $$('.arch-component').forEach(comp => {
+      comp.addEventListener('click', function () {
+        const diagram = this.closest('.arch-diagram');
+        $$('.arch-component', diagram).forEach(c => c.classList.remove('active'));
+        this.classList.add('active');
+        const descEl = $('.arch-description', diagram);
+        if (descEl) { descEl.textContent = this.dataset.desc || ''; renderMath(descEl); }
+      });
     });
+    $$('.arch-diagram').forEach(markReady);
   });
 
   /* ── BUG / ASSUMPTION CHALLENGE ────────────────────────────── */
   window.checkBugLine = function (el, isCorrect) {
     const challenge = el.closest('.bug-challenge') || el.closest('.assumption-challenge');
     const feedback  = challenge && ($('.bug-feedback', challenge) || $('.assumption-feedback', challenge));
+    const base = feedback && feedback.classList.contains('bug-feedback') ? 'bug-feedback' : 'assumption-feedback';
     if (isCorrect) {
       el.classList.add('correct');
-      if (feedback) {
-        feedback.innerHTML  = '<strong>找到了！</strong> ' + (el.dataset.explanation || '');
-        feedback.className  = (feedback.className.includes('bug') ? 'bug-feedback' : 'assumption-feedback') + ' show success';
-      }
+      setFeedback(feedback, base, 'success', t('found'), el.dataset.explanation);
       $$('.bug-line, .assumption-option', challenge).forEach(l => l.style.pointerEvents = 'none');
     } else {
       el.classList.add('incorrect');
-      if (feedback) {
-        feedback.innerHTML  = (el.dataset.hint || '不是这一行，继续找...');
-        feedback.className  = (feedback.className.includes('bug') ? 'bug-feedback' : 'assumption-feedback') + ' show error';
-      }
+      setFeedback(feedback, base, 'error', '', el.dataset.hint || t('notThisLine'));
       setTimeout(() => {
         el.classList.remove('incorrect');
-        if (feedback) feedback.className = feedback.className.includes('bug') ? 'bug-feedback' : 'assumption-feedback';
+        if (feedback) feedback.className = base;
       }, 1800);
     }
   };
 
-  /* ── ASSUMPTION CHALLENGE (quiz-style) ─────────────────────── */
   window.selectAssumption = function (btn) {
     const block = btn.closest('.assumption-challenge');
     $$('.assumption-option', block).forEach(o => o.classList.remove('selected'));
@@ -583,194 +617,370 @@
   };
 
   window.checkAssumption = function (containerId) {
-    const container = $('#' + containerId);
-    if (!container) return;
+    const container = document.getElementById(containerId);
+    if (!container) { console.error('[paper-course] checkAssumption: no element #' + containerId); return; }
     const selected = $('.assumption-option.selected', container);
     const feedback = $('.assumption-feedback', container);
     const correct  = container.dataset.correct;
-
-    if (!selected) {
-      feedback.textContent = '请先选择一个答案！';
-      feedback.className = 'assumption-feedback show warning';
-      return;
-    }
+    if (!selected) { setFeedback(feedback, 'assumption-feedback', 'warning', '', t('pickAnswer')); return; }
     $$('.assumption-option', container).forEach(o => o.disabled = true);
-
     if (selected.dataset.value === correct) {
       selected.classList.add('correct');
-      feedback.innerHTML = '<strong>正确！</strong> ' + (container.dataset.explanationRight || '');
-      feedback.className = 'assumption-feedback show success';
+      setFeedback(feedback, 'assumption-feedback', 'success', t('correct'), container.dataset.explanationRight);
     } else {
       selected.classList.add('incorrect');
       const correctBtn = $(`.assumption-option[data-value="${correct}"]`, container);
       if (correctBtn) correctBtn.classList.add('correct');
-      feedback.innerHTML = '<strong>不太对。</strong> ' + (container.dataset.explanationWrong || '');
-      feedback.className = 'assumption-feedback show error';
+      setFeedback(feedback, 'assumption-feedback', 'error', t('notQuite'), container.dataset.explanationWrong);
     }
   };
 
+  safeInit('challenges', () => $$('.bug-challenge, .assumption-challenge').forEach(markReady));
+
   /* ── LAYER / ABLATION TOGGLE ───────────────────────────────── */
   window.showLayer = function (layerId, btn) {
-    const demo = btn ? btn.closest('.layer-demo') || btn.closest('.ablation-demo') : null;
+    const demo = btn ? (btn.closest('.layer-demo') || btn.closest('.ablation-demo')) : null;
     if (!demo) return;
     $$('.layer, .ablation-layer', demo).forEach(l => l.style.display = 'none');
-    $$('.layer-tab, .ablation-tab', demo).forEach(t => t.classList.remove('active'));
-    const layer = $('#' + layerId);
+    $$('.layer-tab, .ablation-tab', demo).forEach(tb => tb.classList.remove('active'));
+    // Scope the lookup to this demo so two ablation blocks may reuse layer ids.
+    const layer = $$('.layer, .ablation-layer', demo).find(l => l.id === layerId) || document.getElementById(layerId);
     if (layer) layer.style.display = 'block';
     btn.classList.add('active');
   };
 
+  safeInit('ablation toggle', () => $$('.layer-demo, .ablation-demo').forEach(markReady));
+
   /* ── MATH DERIVATION WALKTHROUGH ───────────────────────────── */
   function initMathDerivation(containerEl) {
-    if (!containerEl) return;
     const steps      = $$('.math-step', containerEl);
     const progressEl = $('.math-progress', containerEl);
     let current = 0;
 
-    // Hide all steps except first
-    steps.forEach((s, i) => { s.style.display = i === 0 ? 'block' : 'none'; });
-
-    function updateProgress() {
-      if (progressEl) progressEl.textContent = '步骤 ' + (current + 1) + ' / ' + steps.length;
-    }
-
     function showStep(idx) {
-      steps.forEach(s => s.style.display = 'none');
-      if (steps[idx]) {
-        steps[idx].style.display = 'block';
-        // Re-render KaTeX for newly visible step
-        if (typeof renderMathInElement === 'function') {
-          renderMathInElement(steps[idx], {
-            delimiters: [
-              {left: '$$', right: '$$', display: true},
-              {left: '$', right: '$', display: false}
-            ],
-            throwOnError: false
-          });
-        }
-      }
-      updateProgress();
-    }
-
-    function next() {
-      if (current < steps.length - 1) { current++; showStep(current); }
-    }
-    function prev() {
-      if (current > 0) { current--; showStep(current); }
-    }
-    function reset() {
-      current = 0; showStep(0);
+      steps.forEach((s, i) => { s.style.display = i === idx ? 'block' : 'none'; });
+      if (progressEl) progressEl.textContent = t('step', { n: idx + 1, total: steps.length });
     }
 
     const nextBtn  = $('.math-next-btn',  containerEl);
     const prevBtn  = $('.math-prev-btn',  containerEl);
     const resetBtn = $('.math-reset-btn', containerEl);
-    if (nextBtn)  nextBtn.addEventListener('click',  next);
-    if (prevBtn)  prevBtn.addEventListener('click',  prev);
-    if (resetBtn) resetBtn.addEventListener('click', reset);
-
-    updateProgress();
+    if (nextBtn)  nextBtn.addEventListener('click',  () => { if (current < steps.length - 1) showStep(++current); });
+    if (prevBtn)  prevBtn.addEventListener('click',  () => { if (current > 0) showStep(--current); });
+    if (resetBtn) resetBtn.addEventListener('click', () => { current = 0; showStep(0); });
+    showStep(0);
+    markReady(containerEl);
   }
 
-  $$('.math-derivation').forEach(el => initMathDerivation(el));
+  safeInit('math derivation', () => $$('.math-derivation').forEach(el => safeInit('math derivation #' + el.id, () => initMathDerivation(el))));
 
   /* ── PSEUDOCODE WALKTHROUGH ────────────────────────────────── */
+  function findControls(containerEl, controlsClass) {
+    // Controls may sit inside the walkthrough, inside a shared wrapper, or as
+    // the walkthrough's next sibling (the layout upstream documented while
+    // its engine only searched inside the walkthrough, leaving them dead).
+    const inside = $('.' + controlsClass, containerEl);
+    if (inside) return inside;
+    const wrapper = containerEl.closest('.pseudocode-walkthrough');
+    if (wrapper && $('.' + controlsClass, wrapper)) return $('.' + controlsClass, wrapper);
+    const sib = containerEl.nextElementSibling;
+    return sib && sib.classList.contains(controlsClass) ? sib : null;
+  }
+
   function initPseudocodeWalkthrough(containerEl) {
-    if (!containerEl) return;
-    const lines      = $$('.pseudocode-line', containerEl);
-    const explLines  = $$('.pe', containerEl);
-    const progressEl = $('.pseudocode-progress', containerEl);
+    const lines     = $$('.pseudocode-line', containerEl);
+    const explLines = $$('.pe', containerEl);
+    const controls  = findControls(containerEl, 'pseudocode-controls');
+    const scope     = controls || containerEl;
+    const progressEl = $('.pseudocode-progress', scope);
     let current = -1;
 
-    function updateProgress() {
-      if (progressEl) progressEl.textContent = (current + 1) + ' / ' + lines.length;
+    if (explLines.length && explLines.length !== lines.length) {
+      console.error('[paper-course] pseudocode #' + containerEl.id + ': ' + lines.length + ' lines but ' + explLines.length + ' explanations');
     }
 
     function highlightLine(idx) {
       lines.forEach(l => l.classList.remove('highlighted'));
       explLines.forEach(l => l.classList.remove('active'));
-      if (lines[idx]) {
-        lines[idx].classList.add('highlighted');
-      }
-      if (explLines[idx]) {
-        explLines[idx].classList.add('active');
-      }
-      updateProgress();
+      if (lines[idx]) lines[idx].classList.add('highlighted');
+      if (explLines[idx]) explLines[idx].classList.add('active');
+      if (progressEl) progressEl.textContent = (idx + 1) + ' / ' + lines.length;
     }
 
-    function next() {
-      if (current < lines.length - 1) { current++; highlightLine(current); }
-    }
-    function prev() {
-      if (current > 0) { current--; highlightLine(current); }
-    }
-    function reset() {
-      current = -1;
-      lines.forEach(l => l.classList.remove('highlighted'));
-      explLines.forEach(l => l.classList.remove('active'));
-      updateProgress();
-    }
-
-    const nextBtn  = $('.pseudocode-next-btn',  containerEl);
-    const prevBtn  = $('.pseudocode-prev-btn',  containerEl);
-    const resetBtn = $('.pseudocode-reset-btn', containerEl);
-    if (nextBtn)  nextBtn.addEventListener('click',  next);
-    if (prevBtn)  prevBtn.addEventListener('click',  prev);
-    if (resetBtn) resetBtn.addEventListener('click', reset);
-
-    updateProgress();
+    const nextBtn  = $('.pseudocode-next-btn',  scope);
+    const prevBtn  = $('.pseudocode-prev-btn',  scope);
+    const resetBtn = $('.pseudocode-reset-btn', scope);
+    if (!nextBtn) console.error('[paper-course] pseudocode #' + containerEl.id + ': no .pseudocode-next-btn found');
+    if (nextBtn)  nextBtn.addEventListener('click',  () => { if (current < lines.length - 1) highlightLine(++current); });
+    if (prevBtn)  prevBtn.addEventListener('click',  () => { if (current > 0) highlightLine(--current); });
+    if (resetBtn) resetBtn.addEventListener('click', () => { current = -1; highlightLine(-1); });
+    highlightLine(-1);
+    markReady(containerEl);
   }
 
-  $$('.pseudocode-translation').forEach(el => initPseudocodeWalkthrough(el));
+  safeInit('pseudocode', () => $$('.pseudocode-translation').forEach(el => safeInit('pseudocode #' + el.id, () => initPseudocodeWalkthrough(el))));
 
   /* ── RESULT COMPARISON ─────────────────────────────────────── */
   function initResultComparison(containerEl) {
-    if (!containerEl) return;
     const metricBtns = $$('.result-metric', containerEl);
     const allBars    = $$('.result-bar', containerEl);
+    const unit       = containerEl.dataset.unit != null ? containerEl.dataset.unit : '%';
+    const max        = parseFloat(containerEl.dataset.max || '100');
 
     function showMetric(metricName) {
-      metricBtns.forEach(b => b.classList.remove('active'));
-      const activeBtn = $(`.result-metric[data-metric="${metricName}"]`, containerEl);
-      if (activeBtn) activeBtn.classList.add('active');
-
+      metricBtns.forEach(b => b.classList.toggle('active', b.dataset.metric === metricName));
       allBars.forEach(bar => {
-        const value = bar.dataset[metricName] || bar.dataset.value || '0';
+        const raw   = (metricName && bar.dataset[metricName]) || bar.dataset.value || '0';
+        const value = parseFloat(raw);
         const fill  = $('.result-fill', bar);
         const valEl = $('.result-value', bar);
-        if (fill) fill.style.width = value + '%';
-        if (valEl) valEl.textContent = value + '%';
+        if (fill)  fill.style.width = Math.max(0, Math.min(100, (value / max) * 100)) + '%';
+        if (valEl) valEl.textContent = raw + unit;
       });
     }
 
-    metricBtns.forEach(btn => {
-      btn.addEventListener('click', () => showMetric(btn.dataset.metric));
-    });
-
-    // Initialize with first metric
-    if (metricBtns.length > 0) {
-      showMetric(metricBtns[0].dataset.metric);
-    }
+    metricBtns.forEach(btn => btn.addEventListener('click', () => showMetric(btn.dataset.metric)));
+    showMetric(metricBtns.length ? metricBtns[0].dataset.metric : null);
+    markReady(containerEl);
   }
 
-  $$('.result-comparison').forEach(el => initResultComparison(el));
+  safeInit('result comparison', () => $$('.result-comparison').forEach(el => safeInit('result comparison', () => initResultComparison(el))));
 
   /* ── RESEARCH LINEAGE TREE ─────────────────────────────────── */
-  $$('.lineage-node').forEach(node => {
-    node.addEventListener('click', function () {
-      const tree = this.closest('.lineage-tree');
-      // Toggle expanded state
-      const wasExpanded = this.classList.contains('expanded');
-      $$('.lineage-node', tree).forEach(n => n.classList.remove('expanded'));
-      if (!wasExpanded) {
-        this.classList.add('expanded');
+  safeInit('lineage tree', () => {
+    $$('.lineage-node').forEach(node => {
+      node.addEventListener('click', function () {
+        const tree = this.closest('.lineage-tree');
+        const wasExpanded = this.classList.contains('expanded');
+        $$('.lineage-node', tree).forEach(n => n.classList.remove('expanded'));
+        if (!wasExpanded) this.classList.add('expanded');
+        const descEl = $('.lineage-description', tree);
+        if (descEl) { descEl.textContent = wasExpanded ? '' : (this.dataset.detail || ''); renderMath(descEl); }
+      });
+    });
+    $$('.lineage-tree').forEach(markReady);
+  });
+
+  /* ── INTERACTIVE EXPLORER ──────────────────────────────────── */
+  // A paper-specific simulation. The HTML is a container with
+  // data-explorer="<name>"; the behaviour lives in explorers/<name>.js, which
+  // pushes {name, spec} onto window.PaperCourseExplorers (see
+  // references/explorer-template.js for the spec format). Script order does
+  // not matter: specs pushed before this file runs are drained below, and
+  // later pushes mount immediately.
+  PC.refuse = function (message) {
+    const e = new Error(message);
+    e.pcRefusal = true;
+    return e;
+  };
+
+  function deepFreeze(v) {
+    if (v && typeof v === 'object' && !Object.isFrozen(v)) {
+      Object.freeze(v);
+      Object.keys(v).forEach(k => deepFreeze(v[k]));
+    }
+    return v;
+  }
+
+  function el(tag, cls, text) {
+    const n = document.createElement(tag);
+    if (cls) n.className = cls;
+    if (text != null) n.textContent = text;
+    return n;
+  }
+
+  function mountExplorer(root, spec) {
+    const name = root.dataset.explorer;
+    if (root.dataset.pcReady) return;
+    if (typeof spec.initial !== 'function' || typeof spec.render !== 'function' || !Array.isArray(spec.actions)) {
+      throw new Error('explorer "' + name + '" spec needs initial(), render() and actions[]');
+    }
+
+    const params = {};
+    (spec.params || []).forEach(p => { params[p.id] = p.value; });
+
+    const paramsEl  = el('div', 'explorer-params');
+    const actionsEl = el('div', 'explorer-actions');
+    const stageEl   = el('div', 'explorer-stage');
+    const msgEl     = el('div', 'explorer-message');
+    const checksEl  = el('div', 'explorer-checks');
+    const logWrap   = el('div', 'explorer-log-wrap');
+    const logEl     = el('ol', 'explorer-log');
+    const toolbar   = el('div', 'explorer-toolbar');
+    const backBtn   = el('button', 'btn explorer-back-btn', t('explorerBack'));
+    const resetBtn  = el('button', 'btn explorer-reset-btn', t('explorerReset'));
+    backBtn.type = resetBtn.type = 'button';
+    toolbar.append(backBtn, resetBtn);
+    logWrap.append(el('div', 'explorer-section-label', t('explorerHistory')), logEl);
+
+    const body = el('div', 'explorer-body');
+    const main = el('div', 'explorer-main');
+    const side = el('div', 'explorer-side');
+    main.append(paramsEl, actionsEl, stageEl, msgEl);
+    side.append(checksEl, logWrap, toolbar);
+    body.append(main, side);
+    const note = $('.explorer-note', root);
+    if (note) root.insertBefore(body, note); else root.appendChild(body);
+
+    let history = []; // [{state, label}]
+
+    function current() { return history[history.length - 1].state; }
+
+    function showMessage(text, kind) {
+      msgEl.textContent = text || '';
+      msgEl.className = 'explorer-message' + (text ? ' show ' + (kind || 'info') : '');
+      renderMath(msgEl);
+    }
+
+    function draw() {
+      const state = current();
+      stageEl.innerHTML = spec.render(state, params);
+
+      actionsEl.querySelectorAll('button').forEach(b => {
+        const action = spec.actions.find(a => a.id === b.dataset.action);
+        b.disabled = !!(action && action.enabled && !action.enabled(state, params));
+      });
+
+      checksEl.textContent = '';
+      if (spec.checks && spec.checks.length) {
+        checksEl.appendChild(el('div', 'explorer-section-label', t('explorerChecks')));
+        spec.checks.forEach(c => {
+          let res = c.test(state, params);
+          if (typeof res === 'boolean') res = { ok: res };
+          const row = el('div', 'explorer-check ' + (res.ok ? 'ok' : 'fail'));
+          const label = el('span', 'explorer-check-label');
+          label.innerHTML = c.label;
+          const pill = el('span', 'explorer-check-pill', res.ok ? t('explorerHolds') : t('explorerFails'));
+          row.append(label, pill);
+          if (res.detail) row.appendChild(el('span', 'explorer-check-detail', res.detail));
+          checksEl.appendChild(row);
+        });
       }
-      // Show detail in a description area if present
-      const descEl = $('.lineage-description', tree);
-      if (descEl) {
-        descEl.textContent = wasExpanded ? '' : (this.dataset.detail || '');
+
+      logEl.textContent = '';
+      if (history.length === 1) {
+        logEl.appendChild(el('li', 'explorer-log-empty', t('explorerNoSteps')));
+      } else {
+        history.slice(1).forEach(h => {
+          const li = el('li');
+          li.innerHTML = h.label;
+          logEl.appendChild(li);
+        });
       }
+      backBtn.disabled = history.length <= 1;
+      renderMath(stageEl);
+      renderMath(checksEl);
+      renderMath(logEl);
+    }
+
+    function start() {
+      history = [{ state: deepFreeze(spec.initial(params)), label: t('explorerStart') }];
+      showMessage('');
+      draw();
+    }
+
+    function run(action, arg) {
+      const before = current();
+      if (action.enabled && !action.enabled(before, params)) return;
+      let after;
+      try {
+        after = action.apply(before, params, arg);
+      } catch (e) {
+        if (e && e.pcRefusal) { showMessage(e.message, 'refused'); return; }
+        console.error('[paper-course] explorer "' + name + '" action "' + action.id + '" threw:', e);
+        showMessage(String(e && e.message || e), 'error');
+        return;
+      }
+      if (after === undefined) {
+        console.error('[paper-course] explorer "' + name + '" action "' + action.id + '" returned undefined; apply() must return the new state');
+        return;
+      }
+      const label = spec.describe ? spec.describe(action, before, after, params, arg) : action.label;
+      history.push({ state: deepFreeze(after), label: label });
+      showMessage(action.note ? action.note(before, after, params, arg) : '', 'info');
+      draw();
+    }
+
+    (spec.params || []).forEach(p => {
+      const wrap = el('label', 'explorer-param');
+      const lab  = el('span', 'explorer-param-label');
+      lab.innerHTML = p.label;
+      const out  = el('span', 'explorer-param-value');
+      let input;
+      if (p.type === 'select') {
+        input = el('select');
+        (p.options || []).forEach(o => {
+          const opt = el('option', null, o.label);
+          opt.value = o.value;
+          if (String(o.value) === String(p.value)) opt.selected = true;
+          input.appendChild(opt);
+        });
+      } else {
+        input = el('input');
+        input.type = 'range';
+        input.min = p.min; input.max = p.max; input.step = p.step || 1; input.value = p.value;
+      }
+      input.dataset.param = p.id;
+      const sync = () => {
+        const raw = input.value;
+        params[p.id] = p.type === 'select' ? (p.options.find(o => String(o.value) === raw) || {}).value : parseFloat(raw);
+        out.textContent = p.type === 'select' ? '' : String(params[p.id]);
+      };
+      input.addEventListener('input', () => { sync(); start(); });
+      sync();
+      wrap.append(lab, input, out);
+      paramsEl.appendChild(wrap);
+    });
+    renderMath(paramsEl);
+
+    spec.actions.forEach(action => {
+      if (action.hidden) return;
+      const b = el('button', 'btn explorer-action');
+      b.type = 'button';
+      b.dataset.action = action.id;
+      b.innerHTML = action.label;
+      if (action.title) b.title = action.title;
+      b.addEventListener('click', () => run(action));
+      actionsEl.appendChild(b);
+    });
+    renderMath(actionsEl);
+
+    // Elements rendered into the stage may carry data-action / data-arg.
+    stageEl.addEventListener('click', e => {
+      const target = e.target.closest('[data-action]');
+      if (!target || !stageEl.contains(target)) return;
+      const action = spec.actions.find(a => a.id === target.dataset.action);
+      if (!action) { console.error('[paper-course] explorer "' + name + '": unknown data-action "' + target.dataset.action + '"'); return; }
+      run(action, target.dataset.arg);
+    });
+
+    backBtn.addEventListener('click', () => { if (history.length > 1) { history.pop(); showMessage(''); draw(); } });
+    resetBtn.addEventListener('click', start);
+
+    start();
+    markReady(root);
+  }
+
+  function registerExplorer(entry) {
+    if (!entry || !entry.name || !entry.spec) {
+      console.error('[paper-course] PaperCourseExplorers.push() needs {name, spec}');
+      return;
+    }
+    const roots = $$('[data-explorer="' + entry.name + '"]');
+    if (!roots.length) console.error('[paper-course] explorer "' + entry.name + '" has a spec but no data-explorer element');
+    roots.forEach(root => safeInit('explorer "' + entry.name + '"', () => mountExplorer(root, entry.spec)));
+  }
+
+  safeInit('explorers', () => {
+    const queued = Array.isArray(window.PaperCourseExplorers) ? window.PaperCourseExplorers : [];
+    window.PaperCourseExplorers = { push: function () { Array.from(arguments).forEach(registerExplorer); } };
+    queued.forEach(registerExplorer);
+    window.addEventListener('load', () => {
+      $$('[data-explorer]').forEach(root => {
+        if (!root.dataset.pcReady) console.error('[paper-course] explorer "' + root.dataset.explorer + '" was never mounted: is explorers/' + root.dataset.explorer + '.js missing or broken?');
+      });
     });
   });
 
+  PC.ready = true;
 })();
