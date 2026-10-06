@@ -258,6 +258,7 @@ def main() -> int:
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     ap.add_argument("index", help="path to the built index.html")
     ap.add_argument("--screenshot", help="also save a full-page screenshot here")
+    ap.add_argument("--shots", help="also save one screenshot per diagram and explorer into this directory, to inspect labels and overlaps")
     ap.add_argument("--json", action="store_true", help="print the result as JSON")
     args = ap.parse_args()
 
@@ -278,9 +279,18 @@ def main() -> int:
         static = page.evaluate(STATIC_CHECKS_JS)
         interaction = page.evaluate(INTERACTION_JS)
         page.wait_for_timeout(200)
-        if args.screenshot:
+        if args.screenshot or args.shots:
             page.evaluate("document.querySelectorAll('.animate-in').forEach(e => e.classList.add('visible'))")
+            page.wait_for_timeout(300)
+        if args.screenshot:
             page.screenshot(path=args.screenshot, full_page=True)
+        if args.shots:
+            out = pathlib.Path(args.shots)
+            out.mkdir(parents=True, exist_ok=True)
+            items = page.locator(".svg-diagram, .explorer")
+            for i in range(items.count()):
+                items.nth(i).screenshot(path=str(out / f"{i:02d}.png"))
+            print(f"  saved {items.count()} diagram/explorer screenshots in {out}")
         browser.close()
 
     errors = [f"console: {e}" for e in console_errors]

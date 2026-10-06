@@ -225,12 +225,12 @@ cd course-name && bash build.sh
 The course is not done until the browser check passes. Run it from the course directory's parent:
 
 ```bash
-uv run --no-project --with playwright python <skill-dir>/scripts/check-course.py course-name/index.html --screenshot course-name/check.png
+uv run --no-project --with playwright python <skill-dir>/scripts/check-course.py course-name/index.html --shots course-name/shots
 ```
 
 It loads the page in Playwright's own headless Chromium (never a personal browser), clicks through every widget, and fails on: console errors, widgets that never initialized or do not respond, KaTeX errors, raw LaTeX left as text, unfilled placeholders, nav/sidebar mismatches, duplicate ids, emoji, callouts and left-stripe boxes. If Playwright's Chromium is missing, run `uv run --no-project --with playwright playwright install chromium` once. If `uv` is unavailable, use `python3 -m venv .venv && .venv/bin/pip install playwright` inside the course directory.
 
-**Fix every FAIL line in the module or explorer source, rebuild, and re-run until it passes.** Then look at the screenshot once for layout problems the script cannot see (overlapping SVG labels, cramped diagrams). Read the WARN lines and fix the ones that matter (for example, foreign-script text leaking into the course).
+**Fix every FAIL line in the module or explorer source, rebuild, and re-run until it passes.** Then open the per-diagram and per-explorer screenshots in `course-name/shots/` with the Read tool and look for what the script cannot see: lines crossing boxes or labels, labels that are cut off, overlap, unreadably small math. Fix what you find and re-run. Read the WARN lines and fix the ones that matter (for example, foreign-script text leaking into the course).
 
 Then walk the user through what was built and ask for feedback. Open the page in the browser only if the user wants that.
 
