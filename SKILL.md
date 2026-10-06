@@ -150,7 +150,7 @@ This is a **menu, not a checklist**. Follow the paper: a theory paper has no exp
 
 **Optional, decided here: interactive explorers.** Read `references/interactive-demo.md`. If the paper has a mechanism with state that changes under operations (an algorithm, update rule, protocol, data structure, or theorem objects you can compute with), plan one to three explorers and the module screens they belong to. If it does not, plan none and move on.
 
-**Do NOT present the curriculum for approval; just build it.**
+**Do NOT present the curriculum for approval; just build it.** The user reviews the finished course in Lavish (Phase 6) instead.
 
 **After designing the curriculum, decide which build path:**
 - **Simple paper** (5-6 modules, single clear contribution): Phase 4 Sequential
@@ -232,7 +232,7 @@ It loads the page in Playwright's own headless Chromium (never a personal browse
 
 **Fix every FAIL line in the module or explorer source, rebuild, and re-run until it passes.** Then open the per-diagram and per-explorer screenshots in `course-name/shots/` with the Read tool and look for what the script cannot see: lines crossing boxes or labels, labels that are cut off, overlap, unreadably small math. Fix what you find and re-run. Read the WARN lines and fix the ones that matter (for example, foreign-script text leaking into the course).
 
-Then walk the user through what was built and ask for feedback. Open the page in the browser only if the user wants that.
+When the check passes and the checklist below holds, go to Phase 6. Never open the page in a browser yourself; the user opens the Lavish link.
 
 **Review checklist (beyond what the script checks):**
 - [ ] Cover page has title, authors, abstract, badges, page range if partial, and a start button
@@ -244,6 +244,23 @@ Then walk the user through what was built and ask for feedback. Open the page in
 - [ ] Limitations are surfaced, not hidden
 - [ ] Your own examples and critique are marked as yours
 - [ ] The language is the user's language throughout
+
+### Phase 6: Review With the User in Lavish (mandatory)
+
+Every course is handed over through [Lavish Editor](https://www.npmjs.com/package/lavish-axi), never as a bare file path. Lavish serves the course locally and lets the user read it, annotate any element or selected text, and send feedback back to you, so the course is reviewed and improved in place. Always run it through `npx` so the latest version is used:
+
+1. **Serve:** `npx lavish-axi course-name/index.html`. The course directory already uses relative asset paths (`styles.css`, `main.js`, `vendor/katex/...`, `explorers/...`), which is what Lavish needs; never change them to `/`-rooted paths. Give the user the session URL it prints, together with a short summary of the course: the modules, the explorers, the page range covered and anything you could not cover.
+2. **Wait for feedback:** `npx lavish-axi poll course-name/index.html`. It blocks silently until the user sends feedback or ends the session; that is normal, never kill it. Keep it in the foreground, unless your harness has a tracked background-job facility that is guaranteed to wake you when the poll returns. Never detach it with `nohup`, `&` or `disown`.
+3. **Apply each round:** read the whole response (delivery consumes it). Each annotation names the element and text it is about; make the change in the source (`modules/*.html`, `explorers/*.js`, `_cover.html`), never in `index.html`, then run `bash build.sh` and the Phase 5 browser check again. A course change that fails the check is not ready to show. The same fidelity rules apply to fixes: the paper's notation, LaTeX, no emoji or callouts.
+4. **Reply and keep listening:** write a short reply saying what you changed (and what you could not change, with the reason) and run `npx lavish-axi poll course-name/index.html --agent-reply-file reply.md`, which shows the reply on the page and waits for the next round. The user reloads the page to see the rebuilt course.
+5. **Stop** when the poll reports that the user ended the session (`Send & End` delivers its final feedback once: apply it, then reply with `npx lavish-axi reply course-name/index.html --agent-reply-file reply.md`). Do not reopen an ended session unless the user asks. If the poll returns `browser_disconnected`, ask the user whether to reopen or end it.
+
+Rules:
+- Run `npx lavish-axi --help` once if anything is unclear; its help and its `next_step` output are the authority on its commands.
+- Layout issues Lavish detects on its own wait in the user's inbox; change things for them only when they arrive as feedback the user queued.
+- Never run `lavish-axi share`: it publishes the course on a public third-party host. Do it only if the user explicitly asks to share it.
+- Lavish needs Node.js (`npx`). If `npx lavish-axi` cannot run, tell the user what is missing and give them the path to `index.html` as the fallback; do not install anything globally.
+- In a non-interactive run (no user can answer), still serve the course and report the URL, but do not start the blocking poll.
 
 ---
 
@@ -278,3 +295,4 @@ The `references/` directory contains detailed specs. **Read them only when you r
 Scripts:
 - **`scripts/new-course.sh <dir>`**: creates the course directory with every verbatim file in place.
 - **`scripts/check-course.py <index.html>`**: the headless-browser check that gates "done".
+- **`npx lavish-axi`** (external): serves the finished course for the user's review and returns their annotations (Phase 6).

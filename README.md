@@ -17,6 +17,7 @@ Give your agent a PDF or an arXiv link and ask it to "turn this paper into a cou
 - **Interactive explorers.** Where the paper has a mechanism with state (an algorithm, an update rule, a protocol, a calculus, the objects of a theorem), the agent builds a small simulation of it: buttons apply the paper's operations, the state renders in the paper's notation, and the paper's invariants are checked live. An explorer that illustrates a theorem must be able to reach the case where the theorem's condition fails, so you can see what the condition protects.
 - **Never shipped broken.** `scripts/check-course.py` loads the course in a headless browser, clicks through every widget and fails on console errors, dead widgets, KaTeX errors, raw LaTeX, clipped diagram labels, navigation mismatches and scroll hijacking. The agent is told a course is not finished until the check passes, and to inspect a screenshot of every diagram.
 - **Restrained design.** A warm "research notebook" look with no emoji, no callout boxes and no decorative stripe borders. Native scrolling.
+- **Reviewed in place with Lavish.** The finished course is always handed over through [Lavish Editor](https://www.npmjs.com/package/lavish-axi) (`npx lavish-axi`): you read it in your browser, annotate any element or passage, and send the feedback back; the agent fixes the source, rebuilds, re-runs the check and replies on the page, round after round.
 - **Your language.** The skill is written in English; the course is written in the language you ask in, with the interface strings translated to match.
 
 <p align="center">
@@ -31,7 +32,7 @@ Copy this directory into a location your agent loads skills from, for example a 
 
 > make a course from https://arxiv.org/abs/xxxx.xxxxx, pages 1-20 only
 
-The browser check needs [uv](https://docs.astral.sh/uv/) (or any Python with `playwright` installed) and Playwright's Chromium:
+Requirements: Node.js for `npx lavish-axi` (the review surface; no global install, `npx` fetches it), and for the browser check [uv](https://docs.astral.sh/uv/) (or any Python with `playwright` installed) and Playwright's Chromium:
 
 ```bash
 uv run --no-project --with playwright playwright install chromium
@@ -43,7 +44,8 @@ uv run --no-project --with playwright playwright install chromium
 2. **Background.** It identifies the prerequisites a curious practitioner is missing and how the paper relates to prior work.
 3. **Curriculum.** 5-8 modules (more for long papers) that follow the paper's own structure, from Module 0 (background and notation) to the critical outlook, with explorers planned where they earn their place.
 4. **Build.** `scripts/new-course.sh` scaffolds the course directory; the agent writes the cover, one HTML file per module and one script per explorer, then `build.sh` assembles `index.html`. Complex papers are written in parallel from per-module briefs.
-5. **Check.** `scripts/check-course.py` runs, every failure is fixed, the diagram screenshots are inspected, and only then is the course presented.
+5. **Check.** `scripts/check-course.py` runs, every failure is fixed and the diagram screenshots are inspected.
+6. **Review.** The course is served with `npx lavish-axi`; your annotations come back to the agent, which applies them to the source, rebuilds, re-checks and replies, until you end the session.
 
 ## Repository layout
 
