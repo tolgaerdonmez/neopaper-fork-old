@@ -20,6 +20,9 @@
 #### Key Figures/Tables
 [Describe what figures/tables should be referenced or recreated as interactive elements]
 
+#### Notation Used
+[The symbols this module uses, copied from the course's notation inventory exactly as the paper typesets them, with where each is defined. Every module uses the same symbols.]
+
 #### Key Quotes
 [Short direct quotes from the paper, with section references]
 
@@ -33,6 +36,8 @@ Check which elements this module needs:
 - [ ] **Quiz** — [number] questions, style: [prediction / critical-reading / design-decision / tracing]
 - [ ] **Drag-and-drop** — items: [list], targets: [list]
 - [ ] **SVG diagram** — what to illustrate
+- [ ] **Interactive explorer** — mechanism simulated, state, actions, live checks (the paper's statements with numbers), the theorem case split if any, simplifications; see `references/interactive-demo.md`
+- [ ] **Notation table** — if this module introduces the paper's notation
 - [ ] **Other** — [lineage tree, ablation toggle, concept map, etc.]
 
 ### Knowledge Expansion Notes
@@ -45,6 +50,7 @@ List only the sections the writing agent needs.
 - `references/design-system.md` → [only if needed]
 - `references/content-philosophy.md` → [always include]
 - `references/gotchas.md` → [always include]
+- `references/interactive-demo.md` + `references/explorer-template.js` → [only if this module has an explorer]
 
 ### Connections
 - **Previous module:** [Title — what it covered]

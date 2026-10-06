@@ -34,6 +34,20 @@ Structure each module as a chapter in that story, not as a section summary.
 
 No walls of text. Each screen teaches exactly one idea. If you need more space, add another screen.
 
+### The Paper's Notation, Exactly
+
+The course must mirror the paper. Readers will go back to the paper, and every difference in notation is a translation they have to do in their head.
+
+- Build a notation inventory in Phase 1: every symbol, operator, type and named object, typeset exactly as in the paper, with where it is defined.
+- Use those symbols and nothing else, in every element: prose, derivations, tooltips, pseudocode, quiz options, explorer labels, SVG diagrams. Same letters, same sub/superscripts, same decorations ($\hat{x}$ vs $\tilde{x}$), same operator ($\circ$, $\cdot$, $;$), same argument order, same code syntax for code listings.
+- When you need a name the paper does not give (a running example's states, an intermediate value), derive it from the paper's notation (if the paper's state is $x$, use $x_0, x_1, x_2$), typeset it in LaTeX, and say once what it denotes.
+- In diagrams, a label that a reader cannot match to a paper object is a bug. Every node and every arrow that stands for a paper object carries that object's symbol, and the caption says which definition or figure the diagram follows.
+- Show a definition in the paper's form first, then explain it. Do not replace it with a "simplified" restatement that changes its meaning or conditions.
+
+### LaTeX For All Math
+
+Every piece of mathematics is typeset with KaTeX: `$...$` inline and `$$...$$` for display, including single symbols in running text ("the learning rate $\eta$"), indices, sets, types and function signatures. Plain-text or Unicode math (`x_i`, `R^n`, `f∘g`, `x0`) is hard to read and is a defect. This applies inside tooltips, quiz text, pseudocode lines, explorer UI and diagrams too.
+
 ### Original Text, Not Paraphrase
 
 The paper's actual text should be quoted sparingly — only for key definitions or claims. The course EXPLAINS the paper, not reproduces it. Direct quotes should be clearly marked with quotation marks and citation references.
@@ -69,7 +83,7 @@ The goal is that by the time the learner reaches Module 1, they have the vocabul
 
 ### Make It Memorable
 
-Use "aha!" callout boxes for key insights. Use humor where natural. Give methods and concepts personality.
+Make the key insight of each screen land with one strong sentence (`.key-idea`), a well-chosen example, or an explorer the learner can poke at. Do not use callout boxes, stripe-bordered boxes or emoji: they read as generated filler and this design system forbids them. Use humor sparingly and only where it is natural.
 
 ### Glossary Tooltips — No Term Left Behind
 
@@ -79,7 +93,7 @@ Every technical term gets a tooltip on first use per module. Be extremely aggres
 - Acronyms (GRPO, PPO, RLHF, LoRA) — ALWAYS tooltip on first use
 - Software/model names the learner might not know
 
-**Tooltip format (bilingual):** `Explanation in the course language (English Term)` — e.g., "Policy Gradient: an optimization method that updates model parameters by computing the gradient of the policy"
+**Tooltip format:** the definition in the course language. In a non-English course, add the English term in parentheses: `Term in the course language (English Term): definition`. Example (English course): "Policy gradient: an optimization method that updates model parameters by following the gradient of the expected reward with respect to the policy's parameters"
 
 Do NOT tooltip terms the learner likely knows from general education (e.g., "hypothesis," "experiment," "control group").
 

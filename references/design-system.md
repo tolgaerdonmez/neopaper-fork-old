@@ -1,6 +1,8 @@
 # Design System Reference
 
-Complete CSS design tokens for the paper-to-course system. Copy `styles.css` verbatim into the course directory; customize only the accent color via `_base.html`.
+Complete CSS design tokens for the paper-course system. `scripts/new-course.sh` copies `styles.css` verbatim into the course directory; customize only the accent color via `_base.html`.
+
+**Forbidden decoration:** no emoji, no callout boxes, and no colored stripe borders (a thick `border-left` or `border-top` in an accent color on a card or box). Emphasis comes from typography (`.key-idea`), whitespace and the accent color on text, numbers and buttons. Do not reintroduce stripes through inline styles.
 
 ## Table of Contents
 1. [Color Palette](#color-palette)
@@ -153,6 +155,7 @@ All diagrams (flowcharts, concept maps, lineage trees, experimental frameworks) 
 - Colors: use CSS variables (`var(--color-accent)`, `var(--color-border)`, etc.)
 - ViewBox: use `viewBox="0 0 WIDTH HEIGHT"` with `width="100%"` for responsiveness
 - Complex diagrams: use `<foreignObject>` to embed HTML text blocks
+- Math labels: SVG `<text>` cannot render LaTeX. Put every mathematical label in `<foreignObject>` with `<div xmlns="http://www.w3.org/1999/xhtml" class="svg-math">$...$</div>`; KaTeX renders it like any other math. Labels use the paper's exact symbols.
 
 ```html
 <svg class="svg-diagram" viewBox="0 0 800 400" xmlns="http://www.w3.org/2000/svg">

@@ -1,10 +1,18 @@
 # Interactive Elements Reference
 
-Implementation patterns for every interactive element type used in paper-to-course tutorials.
+Implementation patterns for every interactive element type used in paper-course tutorials.
 
-> **Architecture note:** All CSS and JavaScript live in `references/styles.css` and `references/main.js`, copied verbatim into every course directory. Write only the HTML patterns below — no inline `<style>` or `<script>`.
+> **Architecture note:** All CSS and JavaScript live in `references/styles.css` and `references/main.js`, copied verbatim into every course directory by `scripts/new-course.sh`. Write only the HTML patterns below: no inline `<style>` or `<script>` in module files. The single exception is an interactive explorer, whose behaviour lives in its own `explorers/<name>.js` file (see [Interactive Explorer](#interactive-explorer)).
+
+> **Hard rules for every element:**
+> - **No emoji anywhere**: not in text, buttons, badges, icons, tooltips, SVG labels or data attributes. Where a pattern has an icon slot, put a letter, a number or a math symbol in it.
+> - **No callout boxes and no colored left-stripe boxes.** There is no callout component. State a key insight with `.key-idea` (typography, not a box) or inside the element that teaches it. Never add `border-left` stripes through inline styles either.
+> - **All math is LaTeX** (`$...$` inline, `$$...$$` display), including inside pseudocode, tooltips, quiz text, explorer labels and diagram labels. Never write math as plain text or Unicode approximations (`o_i`, `g∘f`, `x0`, `π(o|q)`).
+> - **Use the paper's own notation exactly**: the same letters, sub/superscripts, operators and names, in diagrams too. See [Notation Table](#notation-table) and `content-philosophy.md`.
+> - The browser check (`scripts/check-course.py`) fails the build on emoji, callouts, left stripes, raw LaTeX and dead widgets.
 
 ## Table of Contents
+- [Module Skeleton](#module-skeleton)
 0. [Cover Page / Hero Section](#cover-page--hero-section)
 1. [Math Derivation Walkthrough](#math-derivation-walkthrough)
 2. [Pseudocode Walkthrough](#pseudocode-walkthrough)
@@ -16,13 +24,42 @@ Implementation patterns for every interactive element type used in paper-to-cour
 8. [Drag-and-Drop Matching](#drag-and-drop-matching)
 9. [Spot the Assumption](#spot-the-assumption)
 10. [Ablation Toggle](#ablation-toggle)
-11. [Callout Boxes](#callout-boxes)
+11. (removed: callout boxes are forbidden, see [Key Idea](#key-idea))
 12. [Contribution / Concept Cards](#contribution--concept-cards)
 13. [Paper Citation Cards](#paper-citation-cards)
 14. [Flow Diagrams](#flow-diagrams)
 15. [Glossary Tooltips](#glossary-tooltips)
 16. [Numbered Step Cards](#numbered-step-cards)
-17. [Icon-Label Rows](#icon-label-rows)
+17. [Label Rows](#label-rows)
+18. [Key Idea](#key-idea)
+19. [Notation Table](#notation-table)
+20. [Interactive Explorer](#interactive-explorer)
+
+---
+
+## Module Skeleton
+
+Every module file holds exactly one section. Screens are the vertical units inside it; each teaches one idea.
+
+```html
+<section class="module" id="module-3">
+  <div class="module-content">
+    <div class="module-header animate-in">
+      <span class="module-number">03</span>
+      <h2 class="module-title">The key insight</h2>
+      <p class="module-subtitle">Section 3.1 of the paper: what it proposes and why it works</p>
+    </div>
+
+    <div class="screen animate-in">
+      <h3 class="screen-heading">One idea per screen</h3>
+      <p>Two or three sentences, then a visual or an interactive element.</p>
+    </div>
+  </div>
+</section>
+```
+
+- `id="module-N"` must match the nav dot's `data-target` and the sidebar item's `href`.
+- The cover is a separate `.course-cover` section in `_cover.html`, never a `.module`.
 
 ---
 
@@ -41,9 +78,9 @@ The course cover is a full-viewport landing page that appears before all modules
     <p class="course-cover-subtitle">How adding random noise to prompts can expand reasoning exploration in LLM training</p>
     <p class="course-cover-authors">Yuntao Bai et al. · arXiv 2026</p>
     <div class="course-cover-meta">
-      <span class="course-cover-meta-item">&#128218; 7 Modules</span>
-      <span class="course-cover-meta-item">&#9201; ~45 min</span>
-      <span class="course-cover-meta-item">&#127891; Intermediate</span>
+      <span class="course-cover-meta-item">7 modules</span>
+      <span class="course-cover-meta-item">~45 min</span>
+      <span class="course-cover-meta-item">Intermediate</span>
     </div>
     <div class="course-cover-abstract">
       <span class="course-cover-abstract-label">Abstract</span>
@@ -114,21 +151,22 @@ The most important teaching element. Shows a mathematical equation and lets the 
 
 Like a code translation block, but for algorithm pseudocode. Left panel: the algorithm. Right panel: line-by-line explanation.
 
-**Wiring:** `main.js` auto-initializes every `.pseudocode-translation`. Controls: `.pseudocode-next-btn`, `.pseudocode-prev-btn`, `.pseudocode-reset-btn`. Progress: `.pseudocode-progress`.
+**Wiring:** `main.js` auto-initializes every `.pseudocode-translation`. Wrap it and its `.pseudocode-controls` in one `.pseudocode-walkthrough` so the engine finds the buttons (`.pseudocode-next-btn`, `.pseudocode-prev-btn`, `.pseudocode-reset-btn`; progress in `.pseudocode-progress`). Pseudocode lines may contain `$...$`; use the paper's symbols there too.
 
 **HTML:**
 ```html
-<div class="pseudocode-translation animate-in" id="pseudo-lope">
+<div class="pseudocode-walkthrough animate-in">
+<div class="pseudocode-translation" id="pseudo-lope">
   <div class="pseudocode-block">
     <span class="translation-label">ALGORITHM</span>
-    <span class="pseudocode-line">INPUT: prompt q, model π, perturbation text P</span>
-    <span class="pseudocode-line">FOR i = 1 TO G DO</span>
-    <span class="pseudocode-line">  q' = CONCAT(random_prefix(P), q)</span>
-    <span class="pseudocode-line">  o_i = SAMPLE(π, q')</span>
-    <span class="pseudocode-line">  r_i = REWARD(o_i, q)</span>
+    <span class="pseudocode-line">INPUT: prompt $q$, model $\pi_\theta$, perturbation text $P$</span>
+    <span class="pseudocode-line">FOR $i = 1$ TO $G$ DO</span>
+    <span class="pseudocode-line">  $q' \gets \text{CONCAT}(\text{prefix}(P), q)$</span>
+    <span class="pseudocode-line">  $o_i \sim \pi_\theta(\cdot \mid q')$</span>
+    <span class="pseudocode-line">  $r_i \gets \text{REWARD}(o_i, q)$</span>
     <span class="pseudocode-line">END FOR</span>
-    <span class="pseudocode-line">A = NORMALIZE({r_1, ..., r_G})</span>
-    <span class="pseudocode-line">UPDATE π USING A</span>
+    <span class="pseudocode-line">$A \gets \text{NORMALIZE}(r_1, \dots, r_G)$</span>
+    <span class="pseudocode-line">UPDATE $\pi_\theta$ USING $A$</span>
   </div>
   <div class="pseudocode-explanation">
     <span class="translation-label">EXPLANATION</span>
@@ -144,12 +182,12 @@ Like a code translation block, but for algorithm pseudocode. Left panel: the alg
     </div>
   </div>
 </div>
-
 <div class="pseudocode-controls">
   <button class="btn pseudocode-prev-btn">Previous line</button>
   <button class="btn pseudocode-next-btn">Next line</button>
   <button class="btn pseudocode-reset-btn">Restart</button>
   <span class="pseudocode-progress"></span>
+</div>
 </div>
 ```
 
@@ -328,7 +366,9 @@ For concept maps, experimental frameworks, algorithm flows, and comparison matri
 
     <rect class="node-rect accent" x="530" y="120" width="160" height="60" rx="12"/>
     <text x="610" y="145" text-anchor="middle" font-weight="700" font-size="13">Model sampling</text>
-    <text x="610" y="163" text-anchor="middle" font-size="11" fill="#9E9790">π(o|q')</text>
+    <foreignObject x="530" y="152" width="160" height="24">
+      <div xmlns="http://www.w3.org/1999/xhtml" class="svg-math">$\pi_\theta(o \mid q')$</div>
+    </foreignObject>
   </svg>
 </div>
 ```
@@ -337,7 +377,10 @@ For concept maps, experimental frameworks, algorithm flows, and comparison matri
 - Use `viewBox` for responsiveness, `width="100%"` on the SVG
 - Use CSS variable references in inline `style` attributes for colors
 - Keep node text short (1-2 lines)
-- Use `<foreignObject>` for longer text blocks if needed
+- **Math in a diagram is LaTeX too.** SVG `<text>` cannot render KaTeX, so put every mathematical label (states, functions, sets, operators) in a `<foreignObject>` containing `<div xmlns="http://www.w3.org/1999/xhtml" class="svg-math">$...$</div>`. Give it enough width and height for the rendered formula. Plain `<text>` is only for words.
+- **Label diagram objects exactly as the paper does.** If the paper calls the iterates $x_t$ and $x_{t+1}$ and the update map $T$, the diagram says $x_t$, $x_{t+1}$ and $T$, not "state 1", "s1", `x1` or `x_t` as plain text. When the diagram needs objects the paper does not name (for example a sequence of states in your own walk-through), derive the names from the paper's notation, typeset them in LaTeX ($x_0, x_1, x_2$) and say in the caption which paper object each one is.
+- Every arrow that stands for a function or an operation carries its label (in LaTeX) so the reader can tell which map goes where; a diagram with unlabeled arrows between labeled states is not finished.
+- Add a one-sentence caption under each diagram that names the paper element it illustrates (Definition, Theorem, Figure, Section).
 
 ---
 
@@ -487,24 +530,9 @@ Shows experimental results with different components removed. Each tab shows wha
 
 ---
 
-## Callout Boxes
+## Callout Boxes (removed)
 
-Max 2 per module.
-
-```html
-<div class="callout callout-accent animate-in">
-  <div class="callout-icon">&#128161;</div>
-  <div class="callout-content">
-    <strong class="callout-title">Key Insight</strong>
-    <p>You don't need to change the model or the reward function -- only the input. This is the most counterintuitive part of LoPE.</p>
-  </div>
-</div>
-```
-
-**Variants:**
-- `callout-accent`: key insights
-- `callout-info`: good to know
-- `callout-warning`: common misconceptions
+This fork has no callout component, and left-stripe boxes of any kind are forbidden. Use [Key Idea](#key-idea) for the one sentence a screen exists to teach, or put the point inside the element that teaches it (a derivation step, an explorer note, a quiz explanation). The browser check fails on `.callout` and on any colored left-stripe box.
 
 ---
 
@@ -586,7 +614,8 @@ Mark up EVERY technical term on first use per module.
 **Rules:**
 - Every technical term on first use per module
 - Keep definitions to 1-2 sentences in everyday language
-- Use bilingual format: `Explanation in the course language (English Term)`
+- Write the definition in the course language. If the course language is not English, add the English term in parentheses: `Term in the course language (English Term): ...`
+- Definitions may contain LaTeX (`$\varphi$`); `main.js` renders it inside the tooltip
 - Don't mark the same term twice within the same screen
 - Use `cursor: pointer` (not `cursor: help`)
 
@@ -615,19 +644,21 @@ Mark up EVERY technical term on first use per module.
 
 ---
 
-## Icon-Label Rows
+## Label Rows
+
+A short list of facts with a marker on the left. The marker holds a letter, a number or a math symbol (`$\Gamma$`), never an emoji or icon glyph.
 
 ```html
 <div class="icon-rows stagger-children animate-in">
   <div class="icon-row">
-    <div class="icon-circle" style="background: var(--color-actor-1)">&#129513;</div>
+    <div class="icon-circle" style="background: var(--color-actor-1)">A</div>
     <div>
       <strong>Math reasoning benchmarks</strong>
       <p>Datasets such as GSM8K, MATH, and Minerva</p>
     </div>
   </div>
   <div class="icon-row">
-    <div class="icon-circle" style="background: var(--color-actor-2)">&#129504;</div>
+    <div class="icon-circle" style="background: var(--color-actor-2)">B</div>
     <div>
       <strong>Model scale</strong>
       <p>Models with 1.7B, 4B, and 7B parameters</p>
@@ -635,3 +666,55 @@ Mark up EVERY technical term on first use per module.
   </div>
 </div>
 ```
+
+---
+
+## Key Idea
+
+The single sentence a screen exists to teach, set in display type. It is typography, not a box: no background, no border, no icon. At most one per screen.
+
+```html
+<p class="key-idea animate-in">
+  <span class="key-idea-label">Key idea</span>
+  Normalizing rewards within a group means the model learns only from the differences between its own answers.
+</p>
+```
+
+---
+
+## Notation Table
+
+Every course whose paper has formal notation includes one notation table, usually in the module where the notation first appears (often Module 0 or the method module). It lists the paper's symbols exactly as the paper typesets them, what each denotes, and where the paper defines it. Use the same symbols everywhere else in the course; if you need a symbol the paper does not define, say so in the table.
+
+```html
+<table class="notation-table animate-in">
+  <thead><tr><th>Symbol</th><th>Meaning</th><th>Defined in</th></tr></thead>
+  <tbody>
+    <tr><td>$\pi_\theta$</td><td>the policy being trained</td><td class="notation-where">Section 2.1, Eq. (1)</td></tr>
+    <tr><td>$A_i$</td><td>advantage of the $i$-th sampled answer</td><td class="notation-where">Eq. (3)</td></tr>
+    <tr><td>$q'$</td><td>perturbed prompt (our name; the paper writes it inline)</td><td class="notation-where">Algorithm 1, line 3</td></tr>
+  </tbody>
+</table>
+```
+
+---
+
+## Interactive Explorer
+
+A small working simulation of the paper's own mechanism (an algorithm, update rule, protocol, data structure or the objects of a theorem) that the learner drives step by step. Read `references/interactive-demo.md` before building one: it says when an explorer is worth it, how to place it, and the fidelity rules. The behaviour goes in `explorers/<name>.js`, written from `references/explorer-template.js`.
+
+```html
+<div class="explorer animate-in" id="explorer-euclid" data-explorer="euclid">
+  <div class="explorer-head">
+    <span class="explorer-kicker">Try it</span>
+    <h3 class="explorer-title">Euclid's algorithm, one step at a time</h3>
+    <p class="explorer-lede">Apply the update rule from Algorithm 1 and watch the invariant of Lemma 2.</p>
+  </div>
+  <p class="explorer-note">Simplifications: integers only; the paper's version works over any Euclidean domain.</p>
+</div>
+```
+
+**Rules:**
+- `data-explorer` must equal the `name` the script pushes; ids stay unique.
+- `main.js` builds the action buttons, the stage, the live checks, the history list and the Step back / Reset toolbar between the head and the note. Do not write those by hand.
+- Labels, stage HTML, checks and history lines use LaTeX with the paper's notation.
