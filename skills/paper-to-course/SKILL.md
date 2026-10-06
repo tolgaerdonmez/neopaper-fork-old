@@ -1,6 +1,6 @@
 ---
 name: paper-to-course
-description: "Turn any academic paper into a beautiful, interactive HTML course with step-by-step LaTeX derivations, the paper's own notation, quizzes and small working simulations of the paper's mechanisms. Use this skill whenever someone wants to create a tutorial, course, or educational walkthrough from a research paper. Trigger when users mention: 'turn this paper into a course,' 'explain this paper interactively,' 'make a tutorial from this paper,' 'teach me this paper,' 'interactive walkthrough of this research,' 'convert this PDF to a tutorial.'"
+description: "Turn any academic paper into a beautiful, interactive HTML course in the paper's own notation, with LaTeX derivations and proofs explained line by line, quizzes and small working simulations of the paper's mechanisms, reviewed with the user in Lavish Editor. Use this skill whenever someone wants to create a tutorial, course, or educational walkthrough from a research paper. Trigger when users mention: 'turn this paper into a course,' 'explain this paper interactively,' 'make a tutorial from this paper,' 'teach me this paper,' 'interactive walkthrough of this research,' 'convert this PDF to a tutorial.'"
 ---
 
 # Paper-to-Course

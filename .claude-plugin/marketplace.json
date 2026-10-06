@@ -1,0 +1,17 @@
+{
+  "name": "paper-to-course",
+  "owner": {
+    "name": "Ahmet Tolga Erdönmez",
+    "url": "https://github.com/tolgaerdonmez"
+  },
+  "description": "paper-to-course: turn research papers into interactive courses, as an installable Claude Code plugin.",
+  "plugins": [
+    {
+      "name": "paper-to-course",
+      "source": "./",
+      "description": "Turn a research paper into an interactive HTML course in the paper's own notation, checked in a headless browser and reviewed in Lavish Editor.",
+      "category": "education",
+      "keywords": ["papers", "research", "course", "latex", "education"]
+    }
+  ]
+}

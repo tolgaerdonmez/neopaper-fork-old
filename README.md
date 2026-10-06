@@ -26,17 +26,60 @@ Give your agent a PDF or an arXiv link and ask it to "turn this paper into a cou
 
 ## Install
 
-Copy this directory into a location your agent loads skills from, for example a project's `.claude/skills/paper-to-course/` for Claude Code. Then ask:
+Pick one route. Both give you the same skill; installing both leaves you with it twice.
 
-> turn ./paper.pdf into a course
+<details open>
+<summary><strong>Any agent (Claude Code, Codex, Cursor, OpenCode, Gemini CLI and others): skills.sh</strong></summary>
 
-> make a course from https://arxiv.org/abs/xxxx.xxxxx, pages 1-20 only
+```bash
+npx skills@latest add tolgaerdonmez/paper-to-course
+```
 
-Requirements: Node.js for `npx lavish-axi` (the review surface; no global install, `npx` fetches it), and for the browser check [uv](https://docs.astral.sh/uv/) (or any Python with `playwright` installed) and Playwright's Chromium:
+The [skills](https://skills.sh) installer asks which agents to install for and copies the skill into your project as ordinary files you own and can edit (add `-g` to install it for your user instead of one project). Non-interactive, for one agent:
+
+```bash
+npx skills@latest add tolgaerdonmez/paper-to-course --skill paper-to-course --agent claude-code -y
+```
+
+Pull later changes with `npx skills update`.
+
+</details>
+
+<details>
+<summary><strong>Claude Code plugin</strong></summary>
+
+```bash
+claude plugin marketplace add tolgaerdonmez/paper-to-course
+claude plugin install paper-to-course@paper-to-course
+```
+
+Or from inside a session: `/plugin marketplace add tolgaerdonmez/paper-to-course`, then `/plugin install paper-to-course@paper-to-course`. The plugin is a managed, read-only install that updates with this repository. (Claude's public plugin directory lists a different, unrelated project also called "paper-to-course"; the `@paper-to-course` suffix above selects this one.)
+
+</details>
+
+<details>
+<summary><strong>By hand</strong></summary>
+
+Copy `skills/paper-to-course/` into the folder your agent loads skills from, for example `.claude/skills/paper-to-course/` in a project for Claude Code.
+
+</details>
+
+### Requirements
+
+- **Node.js**, for `npx lavish-axi` (the review surface; `npx` fetches it, nothing is installed globally).
+- **[uv](https://docs.astral.sh/uv/)** (or any Python with `playwright` installed) and Playwright's Chromium, for the browser check:
 
 ```bash
 uv run --no-project --with playwright playwright install chromium
 ```
+
+### Use
+
+Ask your agent:
+
+> turn ./paper.pdf into a course
+
+> make a course from https://arxiv.org/abs/xxxx.xxxxx, pages 1-20 only
 
 ## How it works
 
@@ -50,22 +93,25 @@ uv run --no-project --with playwright playwright install chromium
 ## Repository layout
 
 ```
-SKILL.md                         the instructions the agent follows
-references/
-  content-philosophy.md          teaching principles, notation fidelity, quizzes, tooltips
-  gotchas.md                     failure modes to avoid
-  interactive-elements.md        HTML pattern for every component
-  interactive-demo.md            when and how to build explorers
-  explorer-template.js           a working explorer to start from
-  design-system.md               tokens, typography, SVG conventions
-  module-brief-template.md       per-module brief for complex papers
-  _base.html _footer.html build.sh styles.css main.js
-  vendor/katex/                  KaTeX 0.16.47 (MIT), woff2 fonts only
-scripts/
-  new-course.sh                  scaffold a course directory
-  check-course.py                headless browser check
-tests/
-  run.sh                         a fixture that must pass and a broken one that must fail
+skills/paper-to-course/            the skill (this is what installers copy)
+  SKILL.md                         the instructions the agent follows
+  LICENSE NOTICE                   travel with every installed copy
+  references/
+    content-philosophy.md          teaching principles, notation fidelity, quizzes, tooltips
+    gotchas.md                     failure modes to avoid
+    interactive-elements.md        HTML pattern for every component
+    interactive-demo.md            when and how to build explorers
+    explorer-template.js           a working explorer to start from
+    design-system.md               tokens, typography, SVG conventions
+    module-brief-template.md       per-module brief for complex papers
+    _base.html _footer.html build.sh styles.css main.js
+    vendor/katex/                  KaTeX 0.16.47 (MIT), woff2 fonts only
+  scripts/
+    new-course.sh                  scaffold a course directory
+    check-course.py                headless browser check
+.claude-plugin/                    Claude Code plugin and marketplace manifests
+tests/run.sh                       a fixture that must pass and a broken one that must fail
+docs/                              README images
 ```
 
 Run the skill's own tests with `bash tests/run.sh`.
@@ -76,7 +122,7 @@ This project is a fork of **[paper-to-course](https://github.com/ZeroxZhang/pape
 
 The interactive explorer is modelled on the "interactive HTML explorer" idea in **[claude-paper](https://github.com/alaliqing/claude-paper) by alaliqing** (MIT License). No code was taken from it.
 
-Math rendering uses **[KaTeX](https://katex.org)** (MIT License), bundled under `references/vendor/katex/`.
+Math rendering uses **[KaTeX](https://katex.org)** (MIT License), bundled under `skills/paper-to-course/references/vendor/katex/`.
 
 ### Changes from upstream
 

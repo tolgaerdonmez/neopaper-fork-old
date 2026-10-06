@@ -4,7 +4,8 @@
 # fixture that must FAIL with the expected reasons.
 # Usage: bash tests/run.sh   (needs uv; uses Playwright's own Chromium)
 set -uo pipefail
-skill="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+repo="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+skill="$repo/skills/paper-to-course"
 work="$(mktemp -d)"
 trap 'rm -rf "$work"' EXIT
 check() { uv run --no-project --with playwright python "$skill/scripts/check-course.py" "$@"; }
@@ -34,17 +35,17 @@ status=0
 good="$work/good"
 bash "$skill/scripts/new-course.sh" "$good" >/dev/null
 fill_base "$good" "Fixture course" "Basics" "Everything else"
-cp "$skill/tests/fixture/_cover.html" "$good/"
-cp "$skill/tests/fixture/modules/"*.html "$good/modules/"
-cp "$skill/tests/fixture/euclid.js" "$good/explorers/euclid.js"
+cp "$repo/tests/fixture/_cover.html" "$good/"
+cp "$repo/tests/fixture/modules/"*.html "$good/modules/"
+cp "$repo/tests/fixture/euclid.js" "$good/explorers/euclid.js"
 (cd "$good" && bash build.sh >/dev/null)
 if check "$good/index.html"; then echo "ok: fixture passes"; else echo "FAILED: fixture should pass"; status=1; fi
 
 bad="$work/bad"
 bash "$skill/scripts/new-course.sh" "$bad" >/dev/null
 fill_base "$bad" "Broken fixture" "Broken"
-cp "$skill/tests/fixture-broken/_cover.html" "$bad/"
-cp "$skill/tests/fixture-broken/modules/"*.html "$bad/modules/"
+cp "$repo/tests/fixture-broken/_cover.html" "$bad/"
+cp "$repo/tests/fixture-broken/modules/"*.html "$bad/modules/"
 (cd "$bad" && bash build.sh >/dev/null)
 out="$(check "$bad/index.html")"
 if [ $? -eq 0 ]; then echo "FAILED: broken fixture should fail"; status=1; fi
