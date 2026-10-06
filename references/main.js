@@ -986,42 +986,94 @@
   /* ── READING POSITION ──────────────────────────────────────── */
   // A reload (or a rebuild after review feedback) returns the reader to the
   // screen they were reading. The position is stored as "screen N plus an
-  // offset into it", not raw pixels, so it survives layout changes, and it
-  // lives in this browser's localStorage only. Storage can be unavailable
-  // (private windows, blocked site data); then nothing is remembered.
+  // offset into it", not raw pixels, so it survives layout changes.
+  //
+  // Where it is stored:
+  //  - Opened directly: this browser's localStorage.
+  //  - Inside Lavish Editor: the page runs in a sandboxed frame that has no
+  //    storage at all, so the position goes into a hidden form control inside
+  //    a [data-lavish-question] wrapper. Lavish keeps such control values in
+  //    its own per-tab storage and writes them back into the page after every
+  //    load, including a full tab reload; the course then scrolls there.
+  //    Lavish only uses these values to restore the page; it sends nothing.
   safeInit('reading position', () => {
     const key = 'paper-to-course:position:' + location.pathname + ':' + document.title;
     const anchors = () => $$('.screen, .module, .course-cover');
     let storage = null;
     try { storage = window.localStorage; storage.getItem(key); } catch (e) { storage = null; }
-    if (!storage) return;
+
+    let field = null;
+    if (!storage) {
+      const wrap = document.createElement('div');
+      wrap.hidden = true;
+      wrap.setAttribute('data-lavish-question', 'paper-to-course reading position');
+      field = document.createElement('input');
+      field.type = 'hidden';
+      field.name = 'paper-to-course-position';
+      wrap.appendChild(field);
+      document.body.appendChild(wrap);
+    }
     if ('scrollRestoration' in history) history.scrollRestoration = 'manual';
 
+    function read() {
+      try { return JSON.parse((storage ? storage.getItem(key) : field.value) || 'null'); } catch (e) { return null; }
+    }
+    function write(value) {
+      const text = JSON.stringify(value);
+      if (storage) { try { storage.setItem(key, text); } catch (e) { /* storage full or blocked */ } return; }
+      if (field.value === text) return;
+      field.value = text;
+      field.dispatchEvent(new Event('input', { bubbles: true })); // Lavish saves on input
+    }
+
+    // Layout position, ignoring transforms: sections not yet revealed are
+    // still shifted by their fade-in transform, which getBoundingClientRect
+    // would count and turn into a drift on every reload.
+    function absTop(el) { let t = 0; for (let n = el; n; n = n.offsetParent) t += n.offsetTop; return t; }
+
+    let restored = false;
     function save() {
+      if (!restored) return; // never overwrite the saved place before going back to it
       const y = window.scrollY;
       let idx = -1, offset = 0;
       anchors().forEach((el, i) => {
-        const top = el.getBoundingClientRect().top + y;
+        const top = absTop(el);
         if (top <= y + 1) { idx = i; offset = y - top; }
       });
-      try { storage.setItem(key, JSON.stringify({ idx: idx, offset: Math.round(offset), y: Math.round(y) })); } catch (e) { /* storage full or blocked */ }
+      write({ idx: idx, offset: Math.round(offset), y: Math.round(y) });
     }
-
-    function restore() {
-      let saved = null;
-      try { saved = JSON.parse(storage.getItem(key) || 'null'); } catch (e) { saved = null; }
-      if (!saved) return;
+    function goTo(saved) {
       const el = anchors()[saved.idx];
-      const y = el ? el.getBoundingClientRect().top + window.scrollY + saved.offset : saved.y;
+      const y = el ? absTop(el) + saved.offset : saved.y;
       window.scrollTo({ top: Math.max(0, y), behavior: 'instant' });
+    }
+    function restore() {
+      if (storage) {
+        const saved = read();
+        if (saved) goTo(saved);
+        restored = true;
+        return;
+      }
+      // Lavish writes the saved value back shortly after the frame loads.
+      let tries = 0;
+      const timer = setInterval(() => {
+        const saved = read();
+        if (saved || ++tries > 30) {
+          clearInterval(timer);
+          if (saved) goTo(saved);
+          restored = true;
+        }
+      }, 100);
     }
 
     let timer = null;
-    window.addEventListener('scroll', () => { clearTimeout(timer); timer = setTimeout(save, 200); }, { passive: true });
+    window.addEventListener('scroll', () => { clearTimeout(timer); timer = setTimeout(save, 250); }, { passive: true });
     window.addEventListener('pagehide', save);
     // Restore after fonts, KaTeX and images have settled the layout.
-    if (document.readyState === 'complete') requestAnimationFrame(restore);
-    else window.addEventListener('load', () => requestAnimationFrame(restore));
+    const settled = () => (document.fonts && document.fonts.ready ? document.fonts.ready : Promise.resolve())
+      .then(() => requestAnimationFrame(restore));
+    if (document.readyState === 'complete') settled();
+    else window.addEventListener('load', settled);
   });
 
   safeInit('lavish pass-through', () => markClickable(document));
