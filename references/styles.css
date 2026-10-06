@@ -819,12 +819,19 @@ p:last-child { margin-bottom: 0; }
 /* ── MATH LABELS INSIDE SVG (foreignObject) ─────────────────── */
 .svg-math {
   font-family: var(--font-body);
-  font-size: 13px;
+  font-size: 18px;
   line-height: 1.2;
   text-align: center;
   color: var(--color-text);
 }
-.svg-math .katex { font-size: 1.05em; }
+.svg-math .katex { font-size: 1.1em; }
+.diagram-caption {
+  max-width: var(--content-width);
+  margin: calc(-1 * var(--space-4)) auto var(--space-8);
+  font-size: var(--text-sm);
+  color: var(--color-text-secondary);
+  text-align: center;
+}
 
 /* ── SVG DIAGRAM CONTAINER ──────────────────────────────────── */
 .svg-diagram {
@@ -852,7 +859,7 @@ p:last-child { margin-bottom: 0; }
   stroke: var(--color-accent);
 }
 .svg-diagram .edge-line {
-  stroke: var(--color-border);
+  stroke: var(--color-text-muted);
   stroke-width: 2;
   fill: none;
 }
@@ -860,7 +867,7 @@ p:last-child { margin-bottom: 0; }
   stroke: var(--color-accent);
 }
 .svg-diagram .edge-arrow {
-  fill: var(--color-border);
+  fill: var(--color-text-muted);
 }
 .svg-diagram .edge-arrow.accent {
   fill: var(--color-accent);

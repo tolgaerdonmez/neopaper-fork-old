@@ -366,7 +366,7 @@ For concept maps, experimental frameworks, algorithm flows, and comparison matri
 
     <rect class="node-rect accent" x="530" y="120" width="160" height="60" rx="12"/>
     <text x="610" y="145" text-anchor="middle" font-weight="700" font-size="13">Model sampling</text>
-    <foreignObject x="530" y="152" width="160" height="24">
+    <foreignObject x="530" y="150" width="160" height="30">
       <div xmlns="http://www.w3.org/1999/xhtml" class="svg-math">$\pi_\theta(o \mid q')$</div>
     </foreignObject>
   </svg>
@@ -380,7 +380,8 @@ For concept maps, experimental frameworks, algorithm flows, and comparison matri
 - **Math in a diagram is LaTeX too.** SVG `<text>` cannot render KaTeX, so put every mathematical label (states, functions, sets, operators) in a `<foreignObject>` containing `<div xmlns="http://www.w3.org/1999/xhtml" class="svg-math">$...$</div>`. Give it enough width and height for the rendered formula. Plain `<text>` is only for words.
 - **Label diagram objects exactly as the paper does.** If the paper calls the iterates $x_t$ and $x_{t+1}$ and the update map $T$, the diagram says $x_t$, $x_{t+1}$ and $T$, not "state 1", "s1", `x1` or `x_t` as plain text. When the diagram needs objects the paper does not name (for example a sequence of states in your own walk-through), derive the names from the paper's notation, typeset them in LaTeX ($x_0, x_1, x_2$) and say in the caption which paper object each one is.
 - Every arrow that stands for a function or an operation carries its label (in LaTeX) so the reader can tell which map goes where; a diagram with unlabeled arrows between labeled states is not finished.
-- Add a one-sentence caption under each diagram that names the paper element it illustrates (Definition, Theorem, Figure, Section).
+- Add a one-sentence caption under each diagram, `<p class="diagram-caption">...</p>`, that names the paper element it illustrates (Definition, Theorem, Figure, Section).
+- `.svg-math` is 18px in SVG units so labels stay legible after the SVG scales down; size each `<foreignObject>` for that (about 30 units tall per line, and wide enough for the whole formula).
 
 ---
 
