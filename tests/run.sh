@@ -49,7 +49,7 @@ cp "$skill/tests/fixture-broken/modules/"*.html "$bad/modules/"
 out="$(check "$bad/index.html")"
 if [ $? -eq 0 ]; then echo "FAILED: broken fixture should fail"; status=1; fi
 for want in "callout component used" "emoji found" "left-stripe box" "raw LaTeX left as text" "KaTeX could not parse" \
-            "no .pseudocode-next-btn found" "was never mounted"; do
+            "no .pseudocode-next-btn found" "was never mounted" "diagram label clipped"; do
   if grep -q "$want" <<<"$out"; then echo "ok: broken fixture reports: $want"; else echo "FAILED: broken fixture did not report: $want"; status=1; fi
 done
 [ $status -eq 0 ] && echo "ALL TESTS PASSED" || { echo "$out"; echo "TESTS FAILED"; }

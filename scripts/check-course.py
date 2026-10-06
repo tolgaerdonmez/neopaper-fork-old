@@ -18,6 +18,7 @@ Fails (exit 1) on:
     chat, quizzes, explorers, ablation tabs, metric toggles, tooltips)
   - emoji anywhere in the page text or tooltips
   - a callout component or any colored left-stripe box
+  - text clipped inside an SVG <foreignObject> label (box too small)
 Warns (exit 0) on: CJK text in a course whose lang is not zh/ja/ko,
 modules without any interactive element, missing cover page.
 """
@@ -113,6 +114,18 @@ STATIC_CHECKS_JS = r"""
       const filled = bg && bg !== 'transparent' && !/rgba\(.*,\s*0\)$/.test(bg);
       if (filled || parseFloat(cs.paddingLeft) > 0) errors.push('left-stripe box (forbidden style): <' + e.tagName.toLowerCase() + ' class="' + e.className + '">');
     }
+  });
+
+  // Text clipped inside diagram labels (foreignObject content larger than its box)
+  $$('svg foreignObject').forEach(fo => {
+    const w = fo.width.baseVal.value, h = fo.height.baseVal.value;
+    Array.from(fo.children).forEach(c => {
+      if (c.scrollHeight > h + 2 || c.scrollWidth > w + 2) {
+        const svg = fo.closest('svg'), mod = fo.closest('.module');
+        errors.push(`diagram label clipped (content ${c.scrollWidth}x${c.scrollHeight} > box ${Math.round(w)}x${Math.round(h)})` +
+          (mod ? ` in #${mod.id}` : '') + ': "' + c.textContent.trim().replace(/\s+/g, ' ').slice(0, 60) + '"');
+      }
+    });
   });
 
   // Language leakage
