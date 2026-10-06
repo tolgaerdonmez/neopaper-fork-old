@@ -1,4 +1,4 @@
-paper-to-course (fork)
+neopaper (a fork of paper-to-course)
 Copyright 2026 the contributors to this fork.
 
 This skill is a fork of paper-to-course by ZeroxZhang
@@ -12,5 +12,5 @@ Explorer" idea from claude-paper by alaliqing
 (https://github.com/alaliqing/claude-paper, MIT License). No code was copied
 from claude-paper; the explorer engine and template were written for this fork.
 
-KaTeX (https://katex.org) is bundled under skills/paper-to-course/references/vendor/katex/ and is
-licensed under the MIT License (see skills/paper-to-course/references/vendor/katex/LICENSE).
+KaTeX (https://katex.org) is bundled under skills/neopaper/references/vendor/katex/ and is
+licensed under the MIT License (see skills/neopaper/references/vendor/katex/LICENSE).

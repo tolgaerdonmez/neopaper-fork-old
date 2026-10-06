@@ -1,5 +1,5 @@
 /**
- * PAPER-TO-COURSE — COMPLETE JS ENGINE
+ * NEOPAPER — COMPLETE JS ENGINE
  * Copied verbatim into the course output directory by scripts/new-course.sh.
  * Never regenerate it. It handles all interactivity generically.
  *
@@ -39,7 +39,7 @@
 
   function safeInit(name, fn) {
     try { fn(); }
-    catch (e) { console.error('[paper-to-course] ' + name + ' failed to initialize:', e); }
+    catch (e) { console.error('[neopaper] ' + name + ' failed to initialize:', e); }
   }
   function markReady(el) { if (el) el.setAttribute('data-pc-ready', '1'); }
 
@@ -99,7 +99,7 @@
     // the source is left visible, instead of being silently drawn in red.
     throwOnError: true,
     errorCallback: function (msg, err) {
-      console.error('[paper-to-course] KaTeX could not parse: ' + msg + ' ' + (err && err.message ? err.message : ''));
+      console.error('[neopaper] KaTeX could not parse: ' + msg + ' ' + (err && err.message ? err.message : ''));
     }
   };
   function renderMath(el) {
@@ -110,7 +110,7 @@
   PC.renderMath = renderMath;
   safeInit('KaTeX', () => {
     if (typeof window.renderMathInElement !== 'function') {
-      console.error('[paper-to-course] KaTeX is not loaded: check that vendor/katex/ was copied next to index.html.');
+      console.error('[neopaper] KaTeX is not loaded: check that vendor/katex/ was copied next to index.html.');
       return;
     }
     renderMath(document.body);
@@ -316,7 +316,7 @@
 
   window.checkQuiz = function (containerId) {
     const container = document.getElementById(containerId);
-    if (!container) { console.error('[paper-to-course] checkQuiz: no element #' + containerId); return; }
+    if (!container) { console.error('[neopaper] checkQuiz: no element #' + containerId); return; }
     $$('.quiz-question-block', container).forEach(q => {
       const selected = $('.quiz-option.selected', q);
       const feedback = $('.quiz-feedback', q);
@@ -418,7 +418,7 @@
 
   window.checkDnD = function (containerId) {
     const container = document.getElementById(containerId);
-    if (!container) { console.error('[paper-to-course] checkDnD: no element #' + containerId); return; }
+    if (!container) { console.error('[neopaper] checkDnD: no element #' + containerId); return; }
     $$('.dnd-zone', container).forEach(zone => {
       const target = $('.dnd-zone-target', zone);
       if (!target || !target.dataset.placed) return;
@@ -609,7 +609,7 @@
 
   window.checkAssumption = function (containerId) {
     const container = document.getElementById(containerId);
-    if (!container) { console.error('[paper-to-course] checkAssumption: no element #' + containerId); return; }
+    if (!container) { console.error('[neopaper] checkAssumption: no element #' + containerId); return; }
     const selected = $('.assumption-option.selected', container);
     const feedback = $('.assumption-feedback', container);
     const correct  = container.dataset.correct;
@@ -696,7 +696,7 @@
     let current = -1;
 
     if (explLines.length && explLines.length !== lines.length) {
-      console.error('[paper-to-course] pseudocode #' + containerEl.id + ': ' + lines.length + ' lines but ' + explLines.length + ' explanations');
+      console.error('[neopaper] pseudocode #' + containerEl.id + ': ' + lines.length + ' lines but ' + explLines.length + ' explanations');
     }
 
     function highlightLine(idx) {
@@ -710,7 +710,7 @@
     const nextBtn  = $('.pseudocode-next-btn',  scope);
     const prevBtn  = $('.pseudocode-prev-btn',  scope);
     const resetBtn = $('.pseudocode-reset-btn', scope);
-    if (!nextBtn) console.error('[paper-to-course] pseudocode #' + containerEl.id + ': no .pseudocode-next-btn found');
+    if (!nextBtn) console.error('[neopaper] pseudocode #' + containerEl.id + ': no .pseudocode-next-btn found');
     if (nextBtn)  nextBtn.addEventListener('click',  () => { if (current < lines.length - 1) highlightLine(++current); });
     if (prevBtn)  prevBtn.addEventListener('click',  () => { if (current > 0) highlightLine(--current); });
     if (resetBtn) resetBtn.addEventListener('click', () => { current = -1; highlightLine(-1); });
@@ -888,12 +888,12 @@
         after = action.apply(before, params, arg);
       } catch (e) {
         if (e && e.pcRefusal) { showMessage(e.message, 'refused'); return; }
-        console.error('[paper-to-course] explorer "' + name + '" action "' + action.id + '" threw:', e);
+        console.error('[neopaper] explorer "' + name + '" action "' + action.id + '" threw:', e);
         showMessage(String(e && e.message || e), 'error');
         return;
       }
       if (after === undefined) {
-        console.error('[paper-to-course] explorer "' + name + '" action "' + action.id + '" returned undefined; apply() must return the new state');
+        console.error('[neopaper] explorer "' + name + '" action "' + action.id + '" returned undefined; apply() must return the new state');
         return;
       }
       const label = spec.describe ? spec.describe(action, before, after, params, arg) : action.label;
@@ -951,7 +951,7 @@
       const target = e.target.closest('[data-action]');
       if (!target || !stageEl.contains(target)) return;
       const action = spec.actions.find(a => a.id === target.dataset.action);
-      if (!action) { console.error('[paper-to-course] explorer "' + name + '": unknown data-action "' + target.dataset.action + '"'); return; }
+      if (!action) { console.error('[neopaper] explorer "' + name + '": unknown data-action "' + target.dataset.action + '"'); return; }
       run(action, target.dataset.arg);
     });
 
@@ -964,11 +964,11 @@
 
   function registerExplorer(entry) {
     if (!entry || !entry.name || !entry.spec) {
-      console.error('[paper-to-course] PaperCourseExplorers.push() needs {name, spec}');
+      console.error('[neopaper] PaperCourseExplorers.push() needs {name, spec}');
       return;
     }
     const roots = $$('[data-explorer="' + entry.name + '"]');
-    if (!roots.length) console.error('[paper-to-course] explorer "' + entry.name + '" has a spec but no data-explorer element');
+    if (!roots.length) console.error('[neopaper] explorer "' + entry.name + '" has a spec but no data-explorer element');
     roots.forEach(root => safeInit('explorer "' + entry.name + '"', () => mountExplorer(root, entry.spec)));
   }
 
@@ -978,7 +978,7 @@
     queued.forEach(registerExplorer);
     window.addEventListener('load', () => {
       $$('[data-explorer]').forEach(root => {
-        if (!root.dataset.pcReady) console.error('[paper-to-course] explorer "' + root.dataset.explorer + '" was never mounted: is explorers/' + root.dataset.explorer + '.js missing or broken?');
+        if (!root.dataset.pcReady) console.error('[neopaper] explorer "' + root.dataset.explorer + '" was never mounted: is explorers/' + root.dataset.explorer + '.js missing or broken?');
       });
     });
   });
@@ -997,7 +997,7 @@
   //    load, including a full tab reload; the course then scrolls there.
   //    Lavish only uses these values to restore the page; it sends nothing.
   safeInit('reading position', () => {
-    const key = 'paper-to-course:position:' + location.pathname + ':' + document.title;
+    const key = 'neopaper:position:' + location.pathname + ':' + document.title;
     const anchors = () => $$('.screen, .module, .course-cover');
     let storage = null;
     try { storage = window.localStorage; storage.getItem(key); } catch (e) { storage = null; }
@@ -1006,10 +1006,10 @@
     if (!storage) {
       const wrap = document.createElement('div');
       wrap.hidden = true;
-      wrap.setAttribute('data-lavish-question', 'paper-to-course reading position');
+      wrap.setAttribute('data-lavish-question', 'neopaper reading position');
       field = document.createElement('input');
       field.type = 'hidden';
-      field.name = 'paper-to-course-position';
+      field.name = 'neopaper-position';
       wrap.appendChild(field);
       document.body.appendChild(wrap);
     }

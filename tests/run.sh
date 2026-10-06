@@ -5,7 +5,7 @@
 # Usage: bash tests/run.sh   (needs uv; uses Playwright's own Chromium)
 set -uo pipefail
 repo="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
-skill="$repo/skills/paper-to-course"
+skill="$repo/skills/neopaper"
 work="$(mktemp -d)"
 trap 'rm -rf "$work"' EXIT
 check() { uv run --no-project --with playwright python "$skill/scripts/check-course.py" "$@"; }

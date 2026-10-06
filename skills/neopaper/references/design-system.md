@@ -1,6 +1,6 @@
 # Design System Reference
 
-Complete CSS design tokens for the paper-to-course system. `scripts/new-course.sh` copies `styles.css` verbatim into the course directory; customize only the accent color via `_base.html`.
+Complete CSS design tokens for the neopaper system. `scripts/new-course.sh` copies `styles.css` verbatim into the course directory; customize only the accent color via `_base.html`.
 
 **Forbidden decoration:** no emoji, no callout boxes, and no colored stripe borders (a thick `border-left` or `border-top` in an accent color on a card or box). Emphasis comes from typography (`.key-idea`), whitespace and the accent color on text, numbers and buttons. Do not reintroduce stripes through inline styles.
 

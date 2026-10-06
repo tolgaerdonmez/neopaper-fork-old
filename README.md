@@ -1,6 +1,6 @@
-# paper-to-course
+# neopaper
 
-*A fork of [ZeroxZhang/paper-to-course](https://github.com/ZeroxZhang/paper-to-course), extended and hardened. See [Credits](#credits).*
+*A new kind of paper. Forked from [ZeroxZhang/paper-to-course](https://github.com/ZeroxZhang/paper-to-course), extended and hardened. See [Credits](#credits).*
 
 **An agent skill that turns a research paper into an interactive, self-contained HTML course, written in the paper's own notation and checked in a real browser before it is called done.**
 
@@ -32,13 +32,13 @@ Pick one route. Both give you the same skill; installing both leaves you with it
 <summary><strong>Any agent (Claude Code, Codex, Cursor, OpenCode, Gemini CLI and others): skills.sh</strong></summary>
 
 ```bash
-npx skills@latest add tolgaerdonmez/paper-to-course
+npx skills@latest add tolgaerdonmez/neopaper
 ```
 
 The [skills](https://skills.sh) installer asks which agents to install for and copies the skill into your project as ordinary files you own and can edit (add `-g` to install it for your user instead of one project). Non-interactive, for one agent:
 
 ```bash
-npx skills@latest add tolgaerdonmez/paper-to-course --skill paper-to-course --agent claude-code -y
+npx skills@latest add tolgaerdonmez/neopaper --skill neopaper --agent claude-code -y
 ```
 
 Pull later changes with `npx skills update`.
@@ -49,18 +49,18 @@ Pull later changes with `npx skills update`.
 <summary><strong>Claude Code plugin</strong></summary>
 
 ```bash
-claude plugin marketplace add tolgaerdonmez/paper-to-course
-claude plugin install paper-to-course@paper-to-course
+claude plugin marketplace add tolgaerdonmez/neopaper
+claude plugin install neopaper@neopaper
 ```
 
-Or from inside a session: `/plugin marketplace add tolgaerdonmez/paper-to-course`, then `/plugin install paper-to-course@paper-to-course`. The plugin is a managed, read-only install that updates with this repository. (Claude's public plugin directory lists a different, unrelated project also called "paper-to-course"; the `@paper-to-course` suffix above selects this one.)
+Or from inside a session: `/plugin marketplace add tolgaerdonmez/neopaper`, then `/plugin install neopaper@neopaper`. The plugin is a managed, read-only install that updates with this repository.
 
 </details>
 
 <details>
 <summary><strong>By hand</strong></summary>
 
-Copy `skills/paper-to-course/` into the folder your agent loads skills from, for example `.claude/skills/paper-to-course/` in a project for Claude Code.
+Copy `skills/neopaper/` into the folder your agent loads skills from, for example `.claude/skills/neopaper/` in a project for Claude Code.
 
 </details>
 
@@ -93,7 +93,7 @@ Ask your agent:
 ## Repository layout
 
 ```
-skills/paper-to-course/            the skill (this is what installers copy)
+skills/neopaper/            the skill (this is what installers copy)
   SKILL.md                         the instructions the agent follows
   LICENSE NOTICE                   travel with every installed copy
   references/
@@ -122,7 +122,7 @@ This project is a fork of **[paper-to-course](https://github.com/ZeroxZhang/pape
 
 The interactive explorer is modelled on the "interactive HTML explorer" idea in **[claude-paper](https://github.com/alaliqing/claude-paper) by alaliqing** (MIT License). No code was taken from it.
 
-Math rendering uses **[KaTeX](https://katex.org)** (MIT License), bundled under `skills/paper-to-course/references/vendor/katex/`.
+Math rendering uses **[KaTeX](https://katex.org)** (MIT License), bundled under `skills/neopaper/references/vendor/katex/`.
 
 ### Changes from upstream
 

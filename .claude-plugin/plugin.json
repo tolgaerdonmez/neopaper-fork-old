@@ -1,13 +1,13 @@
 {
-  "name": "paper-to-course",
+  "name": "neopaper",
   "version": "1.0.0",
   "description": "Turn a research paper into an interactive HTML course in the paper's own notation: LaTeX derivations shown whole, quizzes, working simulations of the paper's mechanisms, a headless browser check, and review in Lavish Editor.",
   "author": {
     "name": "Ahmet Tolga Erdönmez",
     "url": "https://github.com/tolgaerdonmez"
   },
-  "repository": "https://github.com/tolgaerdonmez/paper-to-course",
+  "repository": "https://github.com/tolgaerdonmez/neopaper",
   "license": "Apache-2.0",
   "keywords": ["papers", "research", "course", "tutorial", "latex", "katex", "education", "skills"],
-  "skills": ["./skills/paper-to-course"]
+  "skills": ["./skills/neopaper"]
 }
