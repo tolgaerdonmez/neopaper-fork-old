@@ -123,7 +123,7 @@ STATIC_CHECKS_JS = r"""
       if (c.scrollHeight > h + 2 || c.scrollWidth > w + 2) {
         const svg = fo.closest('svg'), mod = fo.closest('.module');
         errors.push(`diagram label clipped (content ${c.scrollWidth}x${c.scrollHeight} > box ${Math.round(w)}x${Math.round(h)})` +
-          (mod ? ` in #${mod.id}` : '') + ': "' + c.textContent.trim().replace(/\s+/g, ' ').slice(0, 60) + '"');
+          (mod ? ` in #${mod.id}` : '') + ': "' + (c.innerText || c.textContent).trim().replace(/\s+/g, ' ').slice(0, 60) + '"');
       }
     });
   });
