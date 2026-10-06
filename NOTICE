@@ -1,0 +1,16 @@
+paper-course
+Copyright 2026 the paper-course contributors.
+
+This skill is a fork of paper-to-course by ZeroxZhang
+(https://github.com/ZeroxZhang/paper-to-course, commit e639abb),
+licensed under the Apache License, Version 2.0 (see LICENSE).
+Files derived from that project have been modified; the git history of this
+repository records every change made after the fork point.
+
+The optional interactive explorer module is modelled on the "Interactive HTML
+Explorer" idea from claude-paper by alaliqing
+(https://github.com/alaliqing/claude-paper, MIT License). No code was copied
+from claude-paper; the explorer engine and template were written for this fork.
+
+KaTeX (https://katex.org) is bundled under references/vendor/katex/ and is
+licensed under the MIT License (see references/vendor/katex/LICENSE).

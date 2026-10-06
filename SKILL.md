@@ -1,5 +1,5 @@
 ---
-name: paper-to-course
+name: paper-course
 description: "将任何学术论文转换为精美的交互式 HTML 教程，帮助读者全面理解论文内容及相关知识体系。Turn any academic paper into a beautiful, interactive HTML tutorial. Use this skill whenever someone wants to create a tutorial, course, or educational walkthrough from a research paper. Trigger when users mention: 'turn this paper into a course,' 'explain this paper interactively,' 'make a tutorial from this paper,' 'teach me this paper,' 'interactive walkthrough of this research,' 'convert this PDF to a tutorial,' '把论文变成教程,' '帮我读懂这篇论文,' '论文转课程,' '做一份论文教程.'"
 ---
 
